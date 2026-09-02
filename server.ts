@@ -262,62 +262,76 @@ Target Response Language: ${langCode}
 Analyze the visual and descriptive evidence immediately. Output the structured JSON schema.`;
 
     parts.push({ text: promptText });
-    contents.push({ parts });
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: { parts },
-      config: {
-        systemInstruction,
-        temperature: 0.2,
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            hazard_type: {
-              type: Type.STRING,
-              description: 'Concise medical or physical hazard diagnosis',
-            },
-            severity: {
-              type: Type.STRING,
-              enum: ['minor', 'moderate', 'critical'],
-              description: 'Triage severity classification',
-            },
-            campus_context: {
-              type: Type.STRING,
-              description: 'Campus location identifier',
-            },
-            do_not_rules: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-              description: '2 to 4 strict contraindications / prohibited actions',
-            },
-            steps: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  title: { type: Type.STRING, description: 'Short imperative action header' },
-                  duration_seconds: { type: Type.INTEGER, description: 'Step duration in seconds' },
-                  action_detail: { type: Type.STRING, description: 'Clear instructional detail' },
+    const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+    let lastError: any = null;
+    let responseText = '';
+
+    for (const modelName of modelsToTry) {
+      try {
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents: parts,
+          config: {
+            systemInstruction,
+            temperature: 0.2,
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                hazard_type: {
+                  type: Type.STRING,
+                  description: 'Concise medical or physical hazard diagnosis',
                 },
-                required: ['title', 'duration_seconds', 'action_detail'],
+                severity: {
+                  type: Type.STRING,
+                  enum: ['minor', 'moderate', 'critical'],
+                  description: 'Triage severity classification',
+                },
+                campus_context: {
+                  type: Type.STRING,
+                  description: 'Campus location identifier',
+                },
+                do_not_rules: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING },
+                  description: '2 to 4 strict contraindications / prohibited actions',
+                },
+                steps: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      title: { type: Type.STRING, description: 'Short imperative action header' },
+                      duration_seconds: { type: Type.INTEGER, description: 'Step duration in seconds' },
+                      action_detail: { type: Type.STRING, description: 'Clear instructional detail' },
+                    },
+                    required: ['title', 'duration_seconds', 'action_detail'],
+                  },
+                  description: 'Chronological procedural emergency steps',
+                },
+                whatsapp_message: {
+                  type: Type.STRING,
+                  description: 'Pre-formatted SOS dispatch payload for security and warden',
+                },
               },
-              description: 'Chronological procedural emergency steps',
-            },
-            whatsapp_message: {
-              type: Type.STRING,
-              description: 'Pre-formatted SOS dispatch payload for security and warden',
+              required: ['hazard_type', 'severity', 'campus_context', 'do_not_rules', 'steps', 'whatsapp_message'],
             },
           },
-          required: ['hazard_type', 'severity', 'campus_context', 'do_not_rules', 'steps', 'whatsapp_message'],
-        },
-      },
-    });
+        });
 
-    const responseText = response.text?.trim();
+        responseText = response.text?.trim() || '';
+        if (responseText) {
+          break;
+        }
+      } catch (err: any) {
+        lastError = err;
+        console.warn(`Model ${modelName} failed:`, err?.message || err);
+      }
+    }
+
     if (!responseText) {
-      throw new Error('Empty response from Gemini');
+      throw lastError || new Error('All Gemini models failed');
     }
 
     const parsedData = JSON.parse(responseText);
