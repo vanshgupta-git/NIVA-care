@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { WifiOff } from 'lucide-react';
+import { WifiOff, Radio } from 'lucide-react';
 import { Language } from '../types';
 import { TRANSLATIONS } from '../data/translations';
 
@@ -32,14 +32,14 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({ currentLangu
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-4 left-4 right-4 sm:right-auto sm:max-w-md z-50 flex items-center gap-3 rounded-lg bg-[#1A1A1A] px-4 py-3 text-xs font-medium text-white shadow-xl border border-[#333]"
+      className="fixed bottom-4 left-4 right-4 sm:right-auto sm:max-w-md z-50 flex items-center gap-3 rounded-2xl bg-amber-950/90 px-4 py-3.5 text-xs font-semibold text-amber-200 shadow-2xl border border-amber-500/40 backdrop-blur-xl animate-fade-in"
     >
-      <div className="flex h-2.5 w-2.5 relative">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F2994A] opacity-75"></span>
-        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#F2994A]"></span>
+      <div className="flex h-2.5 w-2.5 relative shrink-0">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
       </div>
-      <WifiOff className="w-4 h-4 text-[#F2994A] shrink-0" />
-      <span className="leading-snug text-[#FDFCFB]">{t.offlineNotice}</span>
+      <WifiOff className="w-4 h-4 text-amber-400 shrink-0" />
+      <span className="leading-snug">{t.offlineNotice}</span>
     </div>
   );
 };

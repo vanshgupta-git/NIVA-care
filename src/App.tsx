@@ -8,11 +8,12 @@ import { EmergencyDispatchPanel } from './components/EmergencyDispatchPanel';
 import { WhatsAppModal } from './components/WhatsAppModal';
 import { EmergencyCallDrawer } from './components/EmergencyCallDrawer';
 import { OfflineIndicator } from './components/OfflineIndicator';
+import { AmbientBackground } from './components/AmbientBackground';
 import { Language, SafetyAssessment, IncidentPreset, AppScreenState } from './types';
 import { TRANSLATIONS } from './data/translations';
 import { INCIDENT_PRESETS } from './data/presets';
 import { analyzeIncident } from './services/geminiService';
-import { ShieldCheck, ArrowLeft, Loader2, Sparkles } from 'lucide-react';
+import { ShieldCheck, ArrowLeft, Loader2, Sparkles, Activity, Radio, PhoneCall } from 'lucide-react';
 
 export default function App() {
   const [currentLanguage, setCurrentLanguage] = useState<Language>('en');
@@ -97,9 +98,12 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFCFB] text-[#1A1A1A] flex flex-col font-sans selection:bg-[#F2994A] selection:text-white">
+    <div className="min-h-screen bg-[#06090F] text-[#F8FAFC] flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200 relative overflow-x-hidden">
       
-      {/* Top Application Header */}
+      {/* Background Animated Ambient Lights & Grid */}
+      <AmbientBackground />
+
+      {/* Floating Glass Application Header */}
       <Header
         currentLanguage={currentLanguage}
         onLanguageChange={handleLanguageChange}
@@ -107,9 +111,9 @@ export default function App() {
       />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 space-y-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 relative z-10">
         
-        {/* State 1: IDLE / INTAKE CONSOLE */}
+        {/* State 1: IDLE / INTAKE DASHBOARD */}
         {screenState === 'IDLE' && (
           <IncidentConsole
             currentLanguage={currentLanguage}
@@ -124,19 +128,20 @@ export default function App() {
           <div className="space-y-8 animate-fade-in">
             
             {/* Back to Intake Navigation */}
-            <div className="flex items-center justify-between pb-2 border-b border-[#E5E2DD]">
+            <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
               <button
                 onClick={handleReset}
                 id="back-to-intake-btn"
-                className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#1A1A1A] hover:bg-[#F9F8F6] bg-white border border-[#E5E2DD] px-3.5 py-2 rounded-md shadow-2xs transition cursor-pointer"
+                className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 px-4 py-2.5 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
               >
-                <ArrowLeft className="w-3.5 h-3.5" />
+                <ArrowLeft className="w-4 h-4 text-cyan-400" />
                 <span>BACK TO INTAKE CONSOLE</span>
               </button>
               
-              <span className="text-[10px] font-mono text-[#666] font-bold uppercase tracking-wider">
-                NIVA EMERGENCY ACTION RUNNER
-              </span>
+              <div className="flex items-center gap-2 text-xs font-mono font-bold text-cyan-400 uppercase tracking-widest bg-cyan-950/80 px-3 py-1.5 rounded-full border border-cyan-500/30">
+                <Activity className="w-3.5 h-3.5 animate-pulse" />
+                <span>EMERGENCY ACTION RUNNER ACTIVE</span>
+              </div>
             </div>
 
             {/* 1. Triage HUD */}
@@ -169,17 +174,32 @@ export default function App() {
 
       </main>
 
+      {/* Floating Emergency SOS bar for Mobile */}
+      <div className="md:hidden fixed bottom-5 right-5 z-40">
+        <button
+          onClick={() => setIsEmergencyDrawerOpen(true)}
+          className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-rose-700 text-white px-5 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider shadow-2xl shadow-red-600/50 border border-red-500/40 animate-emergency-beacon cursor-pointer active:scale-95"
+        >
+          <PhoneCall className="w-4 h-4 animate-pulse" />
+          <span>CAMPUS SOS</span>
+        </button>
+      </div>
+
       {/* Footer */}
-      <footer className="border-t border-[#E5E2DD] bg-[#FDFCFB] py-8 px-4 text-xs text-[#666]">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-[#027A48]" />
-            <span className="font-bold text-[#1A1A1A] uppercase tracking-wider text-[11px]">NIVA CAMPUS HEALTH & EMERGENCY CO-PILOT</span>
-            <span className="text-[#999]">•</span>
-            <span className="text-[11px] text-[#666]">Indian University Safety Standards</span>
+      <footer className="border-t border-white/[0.08] bg-[#06090F]/90 backdrop-blur-xl py-8 px-4 text-xs text-slate-400 relative z-10">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <ShieldCheck className="w-4 h-4 text-cyan-400" />
+            <span className="font-bold text-slate-200 uppercase tracking-wider text-[11px]">NIVA CAMPUS HEALTH & EMERGENCY CO-PILOT</span>
+            <span className="text-slate-600">•</span>
+            <span className="text-[11px] text-slate-400">Indian Engineering Campus Safety Standards</span>
           </div>
-          <div className="text-[10px] font-mono text-[#888] uppercase tracking-wider">
-            PWA Offline • Web Speech • Gemini Multimodal
+          <div className="flex items-center gap-3 text-[10px] font-mono text-slate-500 uppercase tracking-widest">
+            <span>PWA Offline Cache</span>
+            <span>•</span>
+            <span>Web Speech API</span>
+            <span>•</span>
+            <span>Gemini Multimodal Vision</span>
           </div>
         </div>
       </footer>
