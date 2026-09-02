@@ -1,0 +1,11 @@
+{
+  "name": "NIVA — AI Campus Health & Emergency Co-Pilot",
+  "description": "Zero-friction, procedural emergency response co-pilot for Indian college campuses with 60-second safety protocols, multimodal hazard triage, and instant SOS dispatch.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
