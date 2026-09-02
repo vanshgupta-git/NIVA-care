@@ -8,15 +8,34 @@ export interface ProtocolStep {
   action_detail: string;
 }
 
+export interface CategoryScores {
+  codeQuality: number;
+  security: number;
+  efficiency: number;
+  testing: number;
+  accessibility: number;
+  problemStatementAlignment: number;
+}
+
+export interface ImageMetadata {
+  name: string;
+  sizeBytes: number;
+  formattedSize: string;
+  width?: number;
+  height?: number;
+  type: string;
+}
+
 export interface SafetyAssessment {
   hazard_type: string;
   severity: Severity;
-  score?: number; // 0-100 Urgency Index
+  overallScore?: number;
+  scores?: CategoryScores;
   summary?: string;
-  strengths?: string[]; // Positive/protective signs (e.g. "Airway clear", "Localized to epidermis")
-  weaknesses?: string[]; // Risk factors (e.g. "Tissue necrosis risk", "Chemical permeation")
-  detectedElements?: string[]; // Visual findings detected in the image
-  actionableImprovements?: string[]; // Medical follow-up recommendations
+  strengths?: string[];
+  weaknesses?: string[];
+  recommendations?: string[];
+  detectedElements?: string[];
   campus_context: string;
   do_not_rules: string[];
   steps: ProtocolStep[];
@@ -25,6 +44,7 @@ export interface SafetyAssessment {
   isAiGenerated?: boolean;
   timestamp?: string;
   analyzedImagePreview?: string | null;
+  imageMetadata?: ImageMetadata | null;
 }
 
 export interface IncidentPreset {
@@ -46,4 +66,17 @@ export interface ContactInfo {
   displayPhone: string;
   iconType: 'dispensary' | 'security' | 'emergency';
   badge: string;
+}
+
+export function parseScore(val: any, fallback: number = 0): number {
+  if (typeof val === 'number' && !isNaN(val)) {
+    return Math.max(0, Math.min(100, Math.round(val)));
+  }
+  if (typeof val === 'string') {
+    const num = parseInt(val, 10);
+    if (!isNaN(num)) {
+      return Math.max(0, Math.min(100, num));
+    }
+  }
+  return fallback;
 }

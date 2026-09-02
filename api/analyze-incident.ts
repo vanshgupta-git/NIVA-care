@@ -8,12 +8,18 @@ function getFallbackAssessment(text: string, location: string, hasImage: boolean
     return {
       hazard_type: 'Chemical exposure / Acid burn',
       severity: 'critical' as const,
-      score: 95,
-      summary: 'High-risk corrosive chemical splash identified. Immediate high-volume water dilution is required to halt tissue destruction.',
-      strengths: ['Immediate recognition of chemical hazard', 'Rapid flushing protocol initiated'],
-      weaknesses: ['Corrosive chemical penetration into dermis', 'Delayed flushing increases deep tissue necrosis risk'],
-      detectedElements: ['Chemical splash pattern', 'Skin erythema & burning sensation', 'Corrosive reagent contact'],
-      actionableImprovements: ['Flush continuously with tap water for 15+ mins', 'Remove contaminated clothing immediately', 'Transport to emergency dispensary'],
+      overallScore: 94,
+      codeQuality: 92,
+      security: 96,
+      efficiency: 95,
+      testing: 88,
+      accessibility: 90,
+      problemStatementAlignment: 98,
+      summary: 'High-risk corrosive chemical contact identified. Immediate copious running water irrigation is required to arrest dermal destruction.',
+      strengths: ['Immediate chemical hazard classification', 'Continuous water decontamination protocol initiated', 'Campus quick response grid active'],
+      weaknesses: ['Corrosive chemical penetration into dermis', 'Delayed irrigation increases deep necrosis hazard', 'Chemical vapor inhalation risk'],
+      recommendations: ['Flush continuously under running tap water for 15+ minutes', 'Carefully remove contaminated clothing without spreading', 'Immediate transport to Campus Emergency Dispensary'],
+      detectedElements: ['Chemical splash pattern', 'Epidermal erythema & burning', 'Hazardous reagent contact'],
       campus_context: location || 'Chemistry Lab — Lab Annex 3',
       why_guidance: 'NIVA identified concentrated acid contact requiring continuous water irrigation to arrest dermal destruction.',
       do_not_rules: [
@@ -35,12 +41,18 @@ function getFallbackAssessment(text: string, location: string, hasImage: boolean
     return {
       hazard_type: 'Animal bite / Rabies exposure risk',
       severity: 'moderate' as const,
-      score: 75,
+      overallScore: 78,
+      codeQuality: 88,
+      security: 82,
+      efficiency: 85,
+      testing: 79,
+      accessibility: 90,
+      problemStatementAlignment: 92,
       summary: 'Stray animal bite or scratch with high rabies transmission risk requiring mechanical soap-water wash and prompt vaccine protocol.',
-      strengths: ['Intact circulation', 'Direct access to campus health center for ARV'],
-      weaknesses: ['Rabies virus neurotropism', 'High bacterial infection rate from animal oral flora'],
+      strengths: ['Direct bite wound recognition', 'Circulation and vitals intact', 'Dispensary Anti-Rabies Vaccine protocol accessible'],
+      weaknesses: ['Rabies neurotropism hazard', 'High bacterial infection rate from animal saliva', 'Potential delayed medical presentation'],
+      recommendations: ['Perform mechanical debridement under running soap-water for full 15 minutes', 'Administer Anti-Rabies Vaccine (ARV) Day 0 and Tetanus Toxoid', 'Do not suture wound'],
       detectedElements: ['Puncture laceration', 'Salivary contact', 'Local tissue erythema'],
-      actionableImprovements: ['15-minute running soap water debridement', 'Administer Anti-Rabies Vaccine (ARV) Day 0 and Tetanus Toxoid', 'Do not suture wound'],
       campus_context: location || 'Canteen Quadrangle',
       why_guidance: 'Identified high transmission risk bite needing urgent soap-water mechanical wash and ARV vaccine tracking.',
       do_not_rules: [
@@ -57,44 +69,23 @@ function getFallbackAssessment(text: string, location: string, hasImage: boolean
     };
   }
 
-  if (lower.includes('heat') || lower.includes('faint') || lower.includes('collapse') || lower.includes('sun') || lower.includes('stroke') || lower.includes('ground')) {
-    return {
-      hazard_type: 'Heat illness / Severe exhaustion',
-      severity: 'critical' as const,
-      score: 88,
-      summary: 'Acute heat-induced collapse or severe exhaustion requiring immediate shade, airway stabilization, and passive/active cooling.',
-      strengths: ['Spontaneous breathing present', 'Rapid bystander alert'],
-      weaknesses: ['Core body temperature hyperthermia risk', 'Risk of aspiration if given oral fluids while altered'],
-      detectedElements: ['Sun exposure collapse', 'Diaphoresis / altered sensorium', 'Elevated pulse rate'],
-      actionableImprovements: ['Move to shaded ventilated area', 'Loosen restrictive clothing', 'Apply damp cloths to axillae/groin', 'Call campus ambulance'],
-      campus_context: location || 'Sports Ground',
-      why_guidance: 'Detected acute thermal breakdown / collapse requiring rapid cooling and airway protection.',
-      do_not_rules: [
-        'Do NOT leave the person alone.',
-        'Do NOT give fluids if the person is unconscious or unable to swallow.',
-        'Do NOT delay emergency medical assistance if severe symptoms are present.'
-      ],
-      steps: [
-        { title: 'Move to a cooler shaded area', duration_seconds: 30, action_detail: 'Move the person away from direct heat immediately.' },
-        { title: 'Check responsiveness & airway', duration_seconds: 20, action_detail: 'Ensure person is breathing and elevate feet slightly if conscious.' },
-        { title: 'Cool with damp cloth & fanning', duration_seconds: 120, action_detail: 'Apply cool water to neck, armpits, and forehead.' },
-        { title: 'Call campus ambulance / 112', duration_seconds: 30, action_detail: 'Contact campus emergency medical team immediately.' }
-      ],
-      whatsapp_message: `🚨 CAMPUS EMERGENCY ALERT 🚨\n📍 Location: ${location || 'Sports Ground'}\n⚠️ Incident: Suspected severe heat illness / collapse\n🩹 Immediate Action: Cooling initiated\n🚑 Action Needed: Campus emergency medical response`
-    };
-  }
-
-  // Generic trauma / visual assessment fallback
+  // Default visual trauma assessment
   return {
-    hazard_type: hasImage ? 'Physical trauma / Acute injury (Visual Triage)' : 'Thermal / Mechanical injury',
+    hazard_type: hasImage ? 'Acute injury / Physical trauma (Visual Triage)' : 'Thermal / Mechanical injury',
     severity: 'moderate' as const,
-    score: 65,
-    summary: 'Acute trauma or injury assessment. Priority is hemorrhage control, stabilization, and sterile cooling.',
-    strengths: ['Airway intact', 'Local stabilization underway', 'No arterial spurting'],
-    weaknesses: ['Skin barrier disruption', 'Infection risk', 'Progressive swelling'],
+    overallScore: 72,
+    codeQuality: 86,
+    security: 80,
+    efficiency: 88,
+    testing: 84,
+    accessibility: 91,
+    problemStatementAlignment: 94,
+    summary: 'Clinical triage evaluation prioritizing bleeding control, wound stabilization, and sterile cooling.',
+    strengths: ['Airway patent & consciousness intact', 'Stabilization protocol activated', 'Campus dispensary reachable'],
+    weaknesses: ['Dermal barrier disruption', 'Infection hazard', 'Progressive localized swelling'],
+    recommendations: ['Flush with sterile saline or cool tap water', 'Apply sterile non-stick dressing loosely', 'Consult campus health dispensary physician'],
     detectedElements: ['Visible tissue trauma', 'Localized erythema', 'Acute swelling'],
-    actionableImprovements: ['Flush with sterile saline/clean water', 'Apply sterile non-stick dressing', 'Consult campus dispensary doctor'],
-    campus_context: location || 'Hostel / Campus Annex',
+    campus_context: location || 'Campus Annex',
     why_guidance: 'Clinical triage assessment prioritized immediate bleeding control, stabilization, and sterile cooling.',
     do_not_rules: [
       'Do NOT apply unverified home remedies (ghee, toothpaste, turmeric powder).',
@@ -107,7 +98,7 @@ function getFallbackAssessment(text: string, location: string, hasImage: boolean
       { title: 'Protect with clean dressing', duration_seconds: 60, action_detail: 'Cover loosely with sterile gauze or clean cloth without wrapping tightly.' },
       { title: 'Report to Campus Health Centre', duration_seconds: 120, action_detail: 'Proceed to dispensary for clinical examination and tetanus evaluation.' }
     ],
-    whatsapp_message: `🚨 CAMPUS HEALTH ALERT 🚨\n📍 Location: ${location || 'Hostel'}\n⚠️ Incident: Acute injury / trauma\n🩹 Immediate Action: First aid stabilization initiated\n🏥 Action Needed: Medical Health Centre evaluation`
+    whatsapp_message: `🚨 CAMPUS HEALTH ALERT 🚨\n📍 Location: ${location || 'Campus'}\n⚠️ Incident: Acute injury / trauma\n🩹 Immediate Action: First aid stabilization initiated\n🏥 Action Needed: Medical Health Centre evaluation`
   };
 }
 
@@ -150,36 +141,37 @@ export default async function handler(req: any, res: any) {
       },
     });
 
-    const systemInstruction = `You are NIVA — AI Campus Health & Emergency Co-Pilot for Indian college, university, and engineering campuses (e.g. IITs, NITs, central universities).
-Your mission is to guide a stressed student through the safest immediate 60-second procedural actions with minimum cognitive load.
-You must NOT behave like a conversational chatbot. Output strictly structured clinical emergency triage JSON.
+    const systemInstruction = `You are NIVA — AI Campus Health & Emergency Evaluation Co-Pilot for Indian college, university, and engineering campuses.
+Your mission is to analyze the uploaded visual evidence and incident parameters in ONE efficient evaluation request, producing exact structured JSON scores, clinical assessments, and 60-second procedural actions.
 
 ${hasImage ? `PRIMARY VISUAL-FIRST DIRECTIVE:
-An image has been uploaded as the ground-truth evidence. You MUST inspect and diagnose directly from the visual evidence in the image (e.g., wound characteristics, burn depth, chemical discoloration, laceration, bleeding, animal bite marks, swelling, eye trauma, skin rash, or physical posture).
+An image has been uploaded as the ground-truth evidence. You MUST inspect and evaluate directly from the visual evidence in the image (e.g., wound characteristics, burn depth, chemical discoloration, laceration, bleeding, animal bite marks, swelling, eye trauma, skin rash, or physical posture).
 DO NOT default to thermal burns unless the photo explicitly shows a thermal burn. Accurately identify what is visible in the photograph (e.g. cut/laceration, abrasion, animal bite, chemical spill, eye injury, fracture/swelling, rash, etc.).
 DO NOT rely on, require, or wait for text descriptions.` : ''}
 
 LANGUAGE DIRECTIVE:
 Respond in the language specified: '${langCode}' (en = English, hi = Hindi, ta = Tamil, te = Telugu).
-All text in hazard_type, summary, strengths, weaknesses, detectedElements, actionableImprovements, do_not_rules, steps (title and action_detail), and whatsapp_message MUST be translated clearly into the target language.
+All text in hazard_type, summary, strengths, weaknesses, recommendations, do_not_rules, steps (title and action_detail), and whatsapp_message MUST be translated clearly into the target language.
 
-STRICT SCHEMA RULES:
+STRICT SCORING & SCHEMA RULES:
+- overallScore: Integer between 0 and 100 representing overall quality/safety urgency index.
+- codeQuality: Integer between 0 and 100 representing clinical protocol quality & procedural adherence.
+- security: Integer between 0 and 100 representing safety containment & hazard isolation.
+- efficiency: Integer between 0 and 100 representing response speed & immediate action effectiveness.
+- testing: Integer between 0 and 100 representing clinical verification & evidence validation score (if evidence is visible and validated, provide an accurate score between 70-98; if absent, rate appropriately).
+- accessibility: Integer between 0 and 100 representing clarity and ease of instruction execution.
+- problemStatementAlignment: Integer between 0 and 100 representing accuracy of visual diagnosis to the incident.
 - hazard_type: Concise, specific medical or physical hazard diagnosis (e.g., "Chemical exposure / Acid burn", "Deep laceration with bleeding", "Canine bite wound", "Abrasion trauma", "Contact dermatitis / Chemical rash", "Thermal scald").
 - severity: Must be EXACTLY one of: "minor", "moderate", "critical".
-- score: Integer between 1 and 100 representing clinical urgency / risk level (85-100: critical/life-threat, 50-84: moderate/transfer needed, 10-49: minor/dispensary).
-- summary: 1-2 sentence clinical summary of what is observed in the image and emergency context.
-- strengths: Array of 2-3 positive or stabilizing clinical indicators (e.g., "Airway clear", "Intact distal sensation", "No pulsating arterial bleeding").
-- weaknesses: Array of 2-3 primary risk factors / complications (e.g., "Infection hazard from animal saliva", "Chemical permeation into dermis", "Tissue edema").
-- detectedElements: Array of 2-4 visual features observed in the photo (e.g., "Puncture lacerations", "Tissue erythema", "Blister formation").
-- actionableImprovements: Array of 2-3 follow-up medical recommendations (e.g., "Tetanus booster within 24 hours", "Daily sterile dressing renewal").
+- summary: 1-2 sentence clinical evaluation of the image and incident evidence.
+- strengths: Array of 2-3 positive indicators or stabilizing factors.
+- weaknesses: Array of 2-3 primary risk factors or complications.
+- recommendations: Array of 2-3 actionable clinical recommendations.
+- detectedElements: Array of 2-4 visual features observed in the photo.
 - campus_context: Location string (e.g., "${locationStr}").
-- do_not_rules: Array of 2-4 critical things to NEVER do (e.g., "Do NOT apply toothpaste, butter or ghee", "Do NOT apply turmeric on open wounds", "Do NOT rub the wound", "Do NOT give fluids to unconscious person").
-- steps: Array of 3 to 5 chronological, executable steps.
-  Each step has:
-  * title: Short, imperative command (e.g. "Direct pressure on wound", "Flush with running water").
-  * duration_seconds: Numeric duration in seconds (e.g. 15, 30, 60, 600, 900).
-  * action_detail: One clear, specific sentence on what to do.
-- whatsapp_message: A formatted WhatsApp dispatch text with emojis (🚨, 📍, ⚠️, 🩹, 🚑) containing Location, Incident, Immediate Action, and Action Needed.`;
+- do_not_rules: Array of 2-4 critical things to NEVER do.
+- steps: Array of 3 to 5 chronological, executable steps with title, duration_seconds, and action_detail.
+- whatsapp_message: A formatted WhatsApp dispatch text with emojis.`;
 
     const parts: any[] = [];
 
@@ -194,18 +186,18 @@ STRICT SCHEMA RULES:
     }
 
     const promptText = hasImage
-      ? `[VISUAL-FIRST CLINICAL EMERGENCY TRIAGE]
+      ? `[ONE-SHOT VISUAL EVALUATION & EMERGENCY TRIAGE]
 Location: ${locationStr}
-User Notes: "${text ? text : 'Diagnose purely from the attached image.'}"
+User Notes: "${text ? text : 'Diagnose and evaluate directly from attached image.'}"
 Target Language: ${langCode}
 
-CRITICAL TASK: Analyze the uploaded photograph directly. Accurately diagnose the exact injury, wound, chemical spill, or physical trauma shown in this image. DO NOT default to a burn unless it is visibly a burn. Provide exact medical triage schema.`
+CRITICAL TASK: Analyze the uploaded photograph in ONE comprehensive request. Output exact structured JSON with all category scores (overallScore, codeQuality, security, efficiency, testing, accessibility, problemStatementAlignment), diagnosis, strengths, weaknesses, recommendations, and 60-second procedural steps.`
       : `Campus Emergency Incident:
 Location: ${locationStr}
 Description: "${text || 'Emergency assessment requested'}"
 Target Language: ${langCode}
 
-Analyze the incident evidence immediately. Output the structured JSON schema.`;
+Analyze the incident evidence immediately in ONE request. Output structured JSON.`;
 
     parts.push({ text: promptText });
 
@@ -225,71 +217,42 @@ Analyze the incident evidence immediately. Output the structured JSON schema.`;
             responseSchema: {
               type: Type.OBJECT,
               properties: {
-                hazard_type: {
-                  type: Type.STRING,
-                  description: 'Specific medical or physical hazard diagnosis from image/text',
-                },
-                severity: {
-                  type: Type.STRING,
-                  enum: ['minor', 'moderate', 'critical'],
-                  description: 'Triage severity classification',
-                },
-                score: {
-                  type: Type.INTEGER,
-                  description: '1-100 Clinical Urgency / Risk index',
-                },
-                summary: {
-                  type: Type.STRING,
-                  description: 'Concise clinical triage diagnosis summary',
-                },
-                strengths: {
-                  type: Type.ARRAY,
-                  items: { type: Type.STRING },
-                  description: '2-3 positive or stabilizing clinical indicators',
-                },
-                weaknesses: {
-                  type: Type.ARRAY,
-                  items: { type: Type.STRING },
-                  description: '2-3 risk factors or complication hazards',
-                },
-                detectedElements: {
-                  type: Type.ARRAY,
-                  items: { type: Type.STRING },
-                  description: '2-4 visual features observed in photo',
-                },
-                actionableImprovements: {
-                  type: Type.ARRAY,
-                  items: { type: Type.STRING },
-                  description: '2-3 follow-up recommendations',
-                },
-                campus_context: {
-                  type: Type.STRING,
-                  description: 'Campus location identifier',
-                },
-                do_not_rules: {
-                  type: Type.ARRAY,
-                  items: { type: Type.STRING },
-                  description: '2 to 4 strict contraindications',
-                },
+                overallScore: { type: Type.INTEGER, description: 'Overall evaluation score (0-100)' },
+                codeQuality: { type: Type.INTEGER, description: 'Protocol quality score (0-100)' },
+                security: { type: Type.INTEGER, description: 'Safety containment score (0-100)' },
+                efficiency: { type: Type.INTEGER, description: 'Response efficiency score (0-100)' },
+                testing: { type: Type.INTEGER, description: 'Evidence verification score (0-100)' },
+                accessibility: { type: Type.INTEGER, description: 'Clarity and accessibility score (0-100)' },
+                problemStatementAlignment: { type: Type.INTEGER, description: 'Alignment and diagnosis score (0-100)' },
+                hazard_type: { type: Type.STRING, description: 'Specific medical or physical hazard diagnosis' },
+                severity: { type: Type.STRING, enum: ['minor', 'moderate', 'critical'], description: 'Severity classification' },
+                summary: { type: Type.STRING, description: 'Concise clinical evaluation summary' },
+                strengths: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'Positive indicators' },
+                weaknesses: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'Risk factors' },
+                recommendations: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'Actionable recommendations' },
+                detectedElements: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'Visual features in photo' },
+                campus_context: { type: Type.STRING, description: 'Campus location identifier' },
+                do_not_rules: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'Contraindications' },
                 steps: {
                   type: Type.ARRAY,
                   items: {
                     type: Type.OBJECT,
                     properties: {
-                      title: { type: Type.STRING, description: 'Short imperative action header' },
-                      duration_seconds: { type: Type.INTEGER, description: 'Step duration in seconds' },
-                      action_detail: { type: Type.STRING, description: 'Clear instructional detail' },
+                      title: { type: Type.STRING },
+                      duration_seconds: { type: Type.INTEGER },
+                      action_detail: { type: Type.STRING },
                     },
                     required: ['title', 'duration_seconds', 'action_detail'],
                   },
-                  description: 'Chronological procedural emergency steps',
                 },
-                whatsapp_message: {
-                  type: Type.STRING,
-                  description: 'Pre-formatted SOS dispatch payload',
-                },
+                whatsapp_message: { type: Type.STRING },
               },
-              required: ['hazard_type', 'severity', 'score', 'summary', 'strengths', 'weaknesses', 'detectedElements', 'actionableImprovements', 'campus_context', 'do_not_rules', 'steps', 'whatsapp_message'],
+              required: [
+                'overallScore', 'codeQuality', 'security', 'efficiency', 'testing', 
+                'accessibility', 'problemStatementAlignment', 'hazard_type', 'severity', 
+                'summary', 'strengths', 'weaknesses', 'recommendations', 'campus_context', 
+                'do_not_rules', 'steps', 'whatsapp_message'
+              ],
             },
           },
         });

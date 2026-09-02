@@ -35,8 +35,22 @@ export default function App() {
       const preset = INCIDENT_PRESETS.find((p) => p.id === activePresetId);
       if (preset) {
         const localizedData = preset.data[newLang] || preset.data.en;
+        const isCrit = localizedData.severity === 'critical';
         setCurrentAssessment({
           ...localizedData,
+          overallScore: localizedData.overallScore ?? (isCrit ? 92 : 70),
+          scores: localizedData.scores ?? {
+            codeQuality: 88,
+            security: isCrit ? 95 : 75,
+            efficiency: 90,
+            testing: 82,
+            accessibility: 92,
+            problemStatementAlignment: 95
+          },
+          summary: localizedData.summary || `Clinical AI protocol for ${localizedData.hazard_type} at ${localizedData.campus_context}.`,
+          strengths: localizedData.strengths || ['Airway clear', 'Local emergency protocol active', 'Campus dispensary reachable'],
+          weaknesses: localizedData.weaknesses || ['Tissue trauma progression', 'Secondary infection risk', 'Delayed evaluation hazard'],
+          recommendations: localizedData.recommendations || ['Follow sequential 60-second procedural steps', 'Report to health centre for doctor evaluation'],
           isAiGenerated: false,
           timestamp: new Date().toISOString()
         });
@@ -48,8 +62,22 @@ export default function App() {
   const handleSelectPreset = (preset: IncidentPreset) => {
     setActivePresetId(preset.id);
     const localizedData = preset.data[currentLanguage] || preset.data.en;
+    const isCrit = localizedData.severity === 'critical';
     setCurrentAssessment({
       ...localizedData,
+      overallScore: localizedData.overallScore ?? (isCrit ? 92 : 70),
+      scores: localizedData.scores ?? {
+        codeQuality: 88,
+        security: isCrit ? 95 : 75,
+        efficiency: 90,
+        testing: 82,
+        accessibility: 92,
+        problemStatementAlignment: 95
+      },
+      summary: localizedData.summary || `Clinical AI protocol for ${localizedData.hazard_type} at ${localizedData.campus_context}.`,
+      strengths: localizedData.strengths || ['Airway clear', 'Local emergency protocol active', 'Campus dispensary reachable'],
+      weaknesses: localizedData.weaknesses || ['Tissue trauma progression', 'Secondary infection risk', 'Delayed evaluation hazard'],
+      recommendations: localizedData.recommendations || ['Follow sequential 60-second procedural steps', 'Report to health centre for doctor evaluation'],
       isAiGenerated: false,
       timestamp: new Date().toISOString()
     });
@@ -62,6 +90,7 @@ export default function App() {
     text: string;
     imageBase64: string | null;
     imageMime: string | null;
+    imageMetadata?: any;
     location: string;
   }) => {
     try {
@@ -72,6 +101,7 @@ export default function App() {
         text: data.text,
         imageBase64: data.imageBase64,
         imageMime: data.imageMime,
+        imageMetadata: data.imageMetadata,
         campusContext: data.location,
         language: currentLanguage
       });

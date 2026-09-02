@@ -1,4 +1,4 @@
-import React, { useState, useRef, DragEvent, ChangeEvent } from 'react';
+import React, { useState, useRef, useEffect, DragEvent, ChangeEvent } from 'react';
 import { 
   Camera, 
   Upload, 
@@ -20,12 +20,14 @@ import {
   AlertCircle,
   ChevronRight,
   CheckCircle2,
-  FileImage
+  FileImage,
+  Clock,
+  RefreshCw
 } from 'lucide-react';
-import { Language, IncidentPreset } from '../types';
+import { Language, IncidentPreset, ImageMetadata } from '../types';
 import { TRANSLATIONS } from '../data/translations';
 import { INCIDENT_PRESETS } from '../data/presets';
-import { compressImage, validateImageFile } from '../services/geminiService';
+import { processAndOptimizeImage, validateImageFile } from '../services/geminiService';
 
 interface IncidentConsoleProps {
   currentLanguage: Language;
@@ -33,6 +35,7 @@ interface IncidentConsoleProps {
     text: string;
     imageBase64: string | null;
     imageMime: string | null;
+    imageMetadata: ImageMetadata | null;
     location: string;
   }) => void;
   onSelectPreset: (preset: IncidentPreset) => void;
@@ -51,17 +54,56 @@ export const IncidentConsole: React.FC<IncidentConsoleProps> = ({
   const [selectedLocation, setSelectedLocation] = useState(t.campusLocations[0]);
   const [customLocation, setCustomLocation] = useState('');
   const [isCustomLoc, setIsCustomLoc] = useState(false);
+  
+  // Image states
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageMime, setImageMime] = useState<string | null>(null);
-  const [imageFileName, setImageFileName] = useState<string | null>(null);
+  const [imageMetadata, setImageMetadata] = useState<ImageMetadata | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [isCompressing, setIsCompressing] = useState(false);
+  const [isProcessingFile, setIsProcessingFile] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // Processing stage messages & elapsed timer
+  const [processingStage, setProcessingStage] = useState(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  // Quick Suggestion Prompts for Indian Campus Health
+  const stages = [
+    'Reading and validating image file...',
+    'Transmitting image to Gemini Vision API...',
+    'Evaluating quality and safety metrics...',
+    'Computing scores and generating clinical protocol...'
+  ];
+
+  // Elapsed timer & stage ticker during AI analysis
+  useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+    let stageInterval: NodeJS.Timeout | null = null;
+
+    if (isAnalyzing) {
+      setElapsedSeconds(0);
+      setProcessingStage(0);
+
+      timer = setInterval(() => {
+        setElapsedSeconds((prev) => prev + 1);
+      }, 1000);
+
+      stageInterval = setInterval(() => {
+        setProcessingStage((prev) => (prev < stages.length - 1 ? prev + 1 : prev));
+      }, 3500);
+    } else {
+      setElapsedSeconds(0);
+      setProcessingStage(0);
+    }
+
+    return () => {
+      if (timer) clearInterval(timer);
+      if (stageInterval) clearInterval(stageInterval);
+    };
+  }, [isAnalyzing]);
+
   const quickSuggestions = [
     { label: '🧪 Acid / Chemical Splash', text: 'Acid chemical splash in chemistry lab on arm', location: 'Chemistry Lab — Lab Annex 3' },
     { label: '🐕 Stray Dog Bite', text: 'Stray dog bite near canteen with bleeding', location: 'Canteen Quadrangle' },
@@ -76,21 +118,21 @@ export const IncidentConsole: React.FC<IncidentConsoleProps> = ({
 
     const validation = validateImageFile(file);
     if (!validation.valid) {
-      setUploadError(validation.error || 'Invalid file.');
+      setUploadError(validation.error || 'Invalid file format or size.');
       return;
     }
 
     try {
-      setIsCompressing(true);
-      const { base64, mimeType } = await compressImage(file);
+      setIsProcessingFile(true);
+      const { base64, mimeType, metadata } = await processAndOptimizeImage(file);
       setImagePreview(base64);
       setImageMime(mimeType);
-      setImageFileName(file.name);
+      setImageMetadata(metadata);
     } catch (e: any) {
-      console.error('Image compression error:', e);
+      console.error('Image processing error:', e);
       setUploadError(e?.message || 'Failed to process image. Please try another.');
     } finally {
-      setIsCompressing(false);
+      setIsProcessingFile(false);
     }
   };
 
@@ -111,14 +153,13 @@ export const IncidentConsole: React.FC<IncidentConsoleProps> = ({
   const removeImage = () => {
     setImagePreview(null);
     setImageMime(null);
-    setImageFileName(null);
+    setImageMetadata(null);
     setUploadError(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
     if (cameraInputRef.current) cameraInputRef.current.value = '';
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const triggerAnalysis = () => {
     if (isAnalyzing || (!description.trim() && !imagePreview)) return;
     
     const finalLocation = isCustomLoc && customLocation.trim() 
@@ -129,8 +170,14 @@ export const IncidentConsole: React.FC<IncidentConsoleProps> = ({
       text: description.trim(),
       imageBase64: imagePreview,
       imageMime: imageMime,
+      imageMetadata: imageMetadata,
       location: finalLocation
     });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    triggerAnalysis();
   };
 
   const handleQuickChip = (chip: typeof quickSuggestions[0]) => {
@@ -155,11 +202,11 @@ export const IncidentConsole: React.FC<IncidentConsoleProps> = ({
   return (
     <div className="space-y-8 animate-fade-in">
       
-      {/* Top Asymmetric Grid: Main AI Intake Hub (Left 65%) + Campus Hotlines Deck (Right 35%) */}
+      {/* Top Grid: Main AI Intake Hub (Left 65%) + Campus Hotlines Deck (Right 35%) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* ========================================================= */}
-        {/* LEFT / CENTERPIECE: NIVA AI MULTIMODAL HEALTH ASSISTANT */}
+        {/* LEFT: NIVA AI MULTIMODAL INTAKE & IMAGE ANALYZER */}
         {/* ========================================================= */}
         <section 
           aria-labelledby="intake-hub-heading"
@@ -175,14 +222,14 @@ export const IncidentConsole: React.FC<IncidentConsoleProps> = ({
                 <div className="flex items-center gap-2 mb-0.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                   <span className="text-[11px] font-mono uppercase tracking-wider font-bold text-emerald-700">
-                    Clinical AI Triage Active
+                    One-Shot Vision Analysis
                   </span>
                 </div>
                 <h2 id="intake-hub-heading" className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 leading-tight">
-                  How can NIVA assist right now?
+                  Upload Image for AI Evaluation
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-                  Upload a photo of the wound/hazard or describe symptoms for instant 60-second guidance.
+                  Drop a photo of an injury, code screen, or emergency hazard for comprehensive multi-score evaluation.
                 </p>
               </div>
             </div>
@@ -191,7 +238,7 @@ export const IncidentConsole: React.FC<IncidentConsoleProps> = ({
           {/* Quick Scenario Chips */}
           <div className="mt-5">
             <span className="text-[11px] font-mono font-bold tracking-wider text-slate-400 uppercase block mb-2">
-              Common Campus Emergencies:
+              Instant Scenario Prompts:
             </span>
             <div className="flex flex-wrap gap-2">
               {quickSuggestions.map((chip, idx) => (
@@ -237,34 +284,50 @@ export const IncidentConsole: React.FC<IncidentConsoleProps> = ({
 
             {/* Image Upload / Preview Zone */}
             {imagePreview ? (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="relative rounded-2xl border border-slate-200 bg-slate-900 overflow-hidden shadow-sm">
                   <img
                     src={imagePreview}
-                    alt="Uploaded incident evidence"
+                    alt="Current uploaded file preview"
                     className="w-full h-56 sm:h-64 object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/30 flex flex-col justify-between p-4">
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-transparent to-black/30 flex flex-col justify-between p-4">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-mono tracking-wider bg-indigo-600 text-white px-3 py-1 rounded-full font-bold uppercase flex items-center gap-1.5 shadow-xs">
                         <CheckCircle2 className="w-3.5 h-3.5" />
-                        IMAGE READY FOR AI VISION
+                        ACTIVE IMAGE LOADED
                       </span>
                       <button
                         type="button"
                         onClick={removeImage}
                         className="p-1.5 rounded-full bg-black/60 text-white hover:bg-rose-600 transition cursor-pointer"
-                        title="Remove photo"
+                        title="Remove and choose different image"
                       >
                         <X className="w-4 h-4" />
                       </button>
                     </div>
-                    <div className="flex items-center justify-between bg-black/50 backdrop-blur-xs p-2.5 rounded-xl text-white text-xs">
-                      <span className="truncate max-w-[200px] text-slate-200 font-mono text-[11px]">
-                        {imageFileName || 'image_evidence.jpg'}
-                      </span>
+
+                    {/* Image Metadata Bar */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 bg-black/60 backdrop-blur-xs p-3 rounded-xl text-white text-xs">
+                      <div className="flex items-center gap-2">
+                        <FileImage className="w-4 h-4 text-indigo-400" />
+                        <span className="font-mono text-slate-200 font-semibold truncate max-w-[180px]">
+                          {imageMetadata?.name || 'uploaded_image.jpg'}
+                        </span>
+                        {imageMetadata?.formattedSize && (
+                          <span className="text-[10px] font-mono bg-white/10 px-2 py-0.5 rounded text-slate-300">
+                            {imageMetadata.formattedSize}
+                          </span>
+                        )}
+                        {imageMetadata?.width && imageMetadata?.height && (
+                          <span className="text-[10px] font-mono bg-indigo-500/30 px-2 py-0.5 rounded text-indigo-200">
+                            {imageMetadata.width} × {imageMetadata.height} px
+                          </span>
+                        )}
+                      </div>
+
                       <span className="text-emerald-300 font-semibold text-[11px]">
-                        AI will diagnose directly from photo
+                        Exact image will be evaluated
                       </span>
                     </div>
                   </div>
@@ -279,26 +342,26 @@ export const IncidentConsole: React.FC<IncidentConsoleProps> = ({
                 onDragLeave={() => setIsDragging(false)}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
-                className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all ${
+                className={`border-2 border-dashed rounded-2xl p-7 text-center cursor-pointer transition-all ${
                   isDragging
                     ? 'border-indigo-500 bg-indigo-50/50'
                     : 'border-slate-200 hover:border-slate-300 bg-slate-50/60 hover:bg-slate-50'
                 }`}
               >
-                <div className="flex flex-col items-center justify-center gap-2.5">
-                  <div className="w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-indigo-600 shadow-xs">
-                    {isCompressing ? (
-                      <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                <div className="flex flex-col items-center justify-center gap-3">
+                  <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-indigo-600 shadow-xs">
+                    {isProcessingFile ? (
+                      <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
                     ) : (
-                      <FileImage className="w-6 h-6 text-indigo-600" />
+                      <FileImage className="w-7 h-7 text-indigo-600" />
                     )}
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-slate-800 flex items-center justify-center gap-1.5">
-                      <span>{t.dragDropPhoto}</span>
+                    <p className="text-sm font-bold text-slate-800">
+                      Drop an image to analyze
                     </p>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      Upload wound, burn, bite, or chemical spill photo (JPG, PNG, WEBP)
+                      Supports JPG, JPEG, PNG, WEBP (Up to 15MB)
                     </p>
                   </div>
                   <div className="flex items-center gap-2.5 mt-1">
@@ -322,7 +385,7 @@ export const IncidentConsole: React.FC<IncidentConsoleProps> = ({
                       className="px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 shadow-xs transition active:scale-98 flex items-center gap-1.5 cursor-pointer"
                     >
                       <Upload className="w-3.5 h-3.5 text-indigo-600" />
-                      <span>{t.uploadPhoto}</span>
+                      <span>Choose File</span>
                     </button>
                   </div>
                 </div>
@@ -336,7 +399,7 @@ export const IncidentConsole: React.FC<IncidentConsoleProps> = ({
                   htmlFor="incident-description-input"
                   className="block text-[11px] font-mono uppercase tracking-wider font-bold text-slate-600"
                 >
-                  {imagePreview ? 'INCIDENT NOTES (OPTIONAL WITH PHOTO)' : 'INCIDENT SYMPTOMS & OBSERVATION'}
+                  {imagePreview ? 'OPTIONAL CONTEXT NOTES' : 'SYMPTOMS / PROBLEM DESCRIPTION'}
                 </label>
                 {imagePreview ? (
                   <span className="text-[10px] text-indigo-600 font-mono uppercase bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full font-bold">
@@ -355,7 +418,7 @@ export const IncidentConsole: React.FC<IncidentConsoleProps> = ({
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder={
                   imagePreview 
-                    ? '(Optional) Add any specific context, or click analyze to diagnose purely from the image...' 
+                    ? '(Optional) Add any notes or click Analyze with AI to evaluate directly from image...' 
                     : t.describePlaceholder
                 }
                 className="w-full rounded-xl niva-input p-3.5 text-sm text-slate-900 placeholder:text-slate-400 transition resize-none leading-relaxed"
@@ -426,6 +489,28 @@ export const IncidentConsole: React.FC<IncidentConsoleProps> = ({
               )}
             </div>
 
+            {/* In-Flight Processing Card */}
+            {isAnalyzing && (
+              <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-2 animate-fade-in">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5 text-xs font-bold text-indigo-900">
+                    <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                    <span>{stages[processingStage]}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-indigo-700 bg-white px-2.5 py-1 rounded-lg border border-indigo-200 shadow-2xs">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>{elapsedSeconds}s</span>
+                  </div>
+                </div>
+                <div className="w-full bg-indigo-200/60 h-1.5 rounded-full overflow-hidden">
+                  <div 
+                    className="bg-indigo-600 h-full rounded-full transition-all duration-700" 
+                    style={{ width: `${Math.min(95, ((processingStage + 1) / stages.length) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Launch AI Protocol CTA Button */}
             <div className="pt-2">
               <button
@@ -441,12 +526,12 @@ export const IncidentConsole: React.FC<IncidentConsoleProps> = ({
                 {isAnalyzing ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>ANALYZING EVIDENCE & GENERATING CLINICAL PROTOCOL...</span>
+                    <span>ANALYZING IMAGE & EVALUATING QUALITY ({elapsedSeconds}s)...</span>
                   </>
                 ) : (
                   <>
                     <Zap className="w-4 h-4 text-white fill-white" />
-                    <span>{imagePreview ? 'ANALYZE PHOTO WITH GEMINI VISION' : 'ANALYZE & GENERATE 60-SEC PROTOCOL'}</span>
+                    <span>{imagePreview ? 'ANALYZE WITH AI (ONE-SHOT VISION)' : 'ANALYZE & GENERATE EVALUATION'}</span>
                     <ArrowRight className="w-4 h-4 ml-0.5" />
                   </>
                 )}
@@ -461,7 +546,7 @@ export const IncidentConsole: React.FC<IncidentConsoleProps> = ({
         {/* ========================================================= */}
         <div className="lg:col-span-4 space-y-6">
           
-          {/* 1. Emergency Hotlines Card */}
+          {/* Emergency Hotlines Card */}
           <div className="bg-rose-50/60 border border-rose-200/80 rounded-3xl p-6 shadow-xs">
             <div className="flex items-center justify-between pb-3.5 border-b border-rose-200/60">
               <div className="flex items-center gap-2.5">
@@ -483,7 +568,6 @@ export const IncidentConsole: React.FC<IncidentConsoleProps> = ({
             </div>
 
             <div className="mt-4 space-y-2.5">
-              {/* Dispensary */}
               <a
                 href="tel:01126591111"
                 className="flex items-center justify-between p-3 rounded-xl bg-white hover:bg-slate-50 border border-rose-100 hover:border-slate-300 transition-all group shadow-2xs"
@@ -502,7 +586,6 @@ export const IncidentConsole: React.FC<IncidentConsoleProps> = ({
                 <Phone className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700" />
               </a>
 
-              {/* Security */}
               <a
                 href="tel:01126591000"
                 className="flex items-center justify-between p-3 rounded-xl bg-white hover:bg-slate-50 border border-rose-100 hover:border-slate-300 transition-all group shadow-2xs"
@@ -521,7 +604,6 @@ export const IncidentConsole: React.FC<IncidentConsoleProps> = ({
                 <Phone className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700" />
               </a>
 
-              {/* National 112 */}
               <a
                 href="tel:112"
                 className="flex items-center justify-between p-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white transition-all group shadow-sm shadow-rose-600/20"
@@ -542,7 +624,7 @@ export const IncidentConsole: React.FC<IncidentConsoleProps> = ({
             </div>
           </div>
 
-          {/* 2. Campus Medical Facilities Status */}
+          {/* Campus Medical Facilities Status */}
           <div className="niva-card p-6 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
@@ -583,21 +665,12 @@ export const IncidentConsole: React.FC<IncidentConsoleProps> = ({
             </div>
           </div>
 
-          {/* 3. Standards Compliance Tag */}
-          <div className="p-4 rounded-2xl bg-white border border-slate-200 flex items-center gap-3 text-slate-700 text-xs shadow-2xs">
-            <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
-            <div>
-              <p className="font-bold text-slate-900 text-xs">WHO & ICMR Guidelines Aligned</p>
-              <p className="text-[11px] text-slate-500 mt-0.5">Emergency protocols verified for Indian university campuses.</p>
-            </div>
-          </div>
-
         </div>
 
       </div>
 
       {/* ========================================================= */}
-      {/* BOTTOM SECTION: INSTANT VERIFIED SCENARIOS & PRESETS */}
+      {/* BOTTOM SECTION: VERIFIED SCENARIOS & PRESETS */}
       {/* ========================================================= */}
       <section 
         aria-labelledby="presets-heading"
@@ -606,7 +679,7 @@ export const IncidentConsole: React.FC<IncidentConsoleProps> = ({
         <div className="flex items-center justify-between">
           <div>
             <span className="text-[11px] font-mono uppercase tracking-wider font-bold text-indigo-700">
-              Verified Protocol Library
+              Verified Benchmark Protocols
             </span>
             <h2 id="presets-heading" className="text-xl font-bold text-slate-900 mt-0.5">
               Instant 60-second procedural guidance for standard campus emergencies:
