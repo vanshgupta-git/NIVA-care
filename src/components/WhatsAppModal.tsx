@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MessageSquare, Copy, Check, ExternalLink, X, AlertTriangle, Radio } from 'lucide-react';
+import { MessageSquare, Copy, Check, ExternalLink, X, AlertTriangle } from 'lucide-react';
 import { Language } from '../types';
 import { TRANSLATIONS } from '../data/translations';
 
@@ -37,26 +37,23 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-fade-in">
-      <div className="w-full max-w-lg rounded-3xl bg-[#0D121F] p-6 sm:p-7 shadow-2xl border border-cyan-500/30 relative overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs animate-fade-in">
+      <div className="w-full max-w-lg rounded-3xl bg-white p-6 sm:p-7 shadow-2xl border border-slate-200">
         
-        {/* Ambient Top Cyan Glow */}
-        <div className="absolute -top-20 -right-20 w-60 h-60 bg-cyan-500/15 rounded-full blur-[70px] pointer-events-none" />
-
         {/* Header */}
-        <div className="flex items-start justify-between pb-4 border-b border-white/[0.08] relative z-10">
+        <div className="flex items-start justify-between pb-4 border-b border-slate-100">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-cyan-950/80 border border-cyan-500/40 text-cyan-400">
+            <div className="p-2.5 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100">
               <MessageSquare className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-[10px] font-mono uppercase tracking-[0.2em] font-bold text-cyan-400">
-                CAMPUS BROADCAST SYSTEM
+              <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-indigo-700">
+                CAMPUS BROADCAST
               </span>
-              <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-tight">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 uppercase tracking-tight">
                 {t.whatsappModalTitle}
               </h3>
-              <p className="text-xs text-slate-400 font-medium">
+              <p className="text-xs text-slate-500 font-medium">
                 {t.whatsappModalDesc}
               </p>
             </div>
@@ -64,40 +61,40 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({
 
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-2 rounded-full hover:bg-white/[0.06] transition cursor-pointer"
+            className="text-slate-400 hover:text-slate-700 p-2 rounded-full hover:bg-slate-100 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Formatted Message Payload Preview */}
-        <div className="mt-5 relative z-10">
-          <div className="rounded-2xl bg-black/50 text-slate-100 p-4 font-mono text-xs sm:text-sm whitespace-pre-wrap leading-relaxed border border-white/10 shadow-inner max-h-60 overflow-y-auto select-all">
+        {/* Message Payload Area */}
+        <div className="mt-4">
+          <div className="rounded-2xl bg-slate-50 text-slate-800 p-4 font-mono text-xs sm:text-sm whitespace-pre-wrap leading-relaxed border border-slate-200 select-all max-h-56 overflow-y-auto">
             {message}
           </div>
         </div>
 
-        {/* Dispatch Warning Tag */}
-        <div className="mt-3.5 flex items-center gap-2.5 text-xs text-amber-300/90 bg-amber-950/40 p-3 rounded-2xl border border-amber-500/25 relative z-10">
-          <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+        {/* Warning Badge */}
+        <div className="mt-3.5 flex items-center gap-2.5 text-xs text-amber-900 bg-amber-50 p-3 rounded-2xl border border-amber-200">
+          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
           <span>Broadcasts to Hostel Warden, Security Control Room & Campus Quick Response Team.</span>
         </div>
 
-        {/* Action Buttons */}
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-10">
+        {/* Actions */}
+        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
             onClick={handleCopy}
             id="copy-sos-btn"
-            className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] hover:bg-white/[0.1] py-3.5 px-4 text-xs font-bold uppercase tracking-wider text-white transition active:scale-95 cursor-pointer"
+            className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 py-3.5 px-4 text-xs font-bold uppercase tracking-wider text-slate-700 transition active:scale-98 cursor-pointer shadow-2xs"
           >
             {copied ? (
               <>
-                <Check className="w-4 h-4 text-emerald-400" />
-                <span className="text-emerald-400">{t.copied}</span>
+                <Check className="w-4 h-4 text-emerald-600" />
+                <span className="text-emerald-700">{t.copied}</span>
               </>
             ) : (
               <>
-                <Copy className="w-4 h-4 text-slate-400" />
+                <Copy className="w-4 h-4 text-slate-500" />
                 <span>{t.copyMessageBtn}</span>
               </>
             )}
@@ -106,9 +103,9 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({
           <button
             onClick={handleOpenWhatsApp}
             id="open-whatsapp-btn"
-            className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 py-3.5 px-4 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-emerald-600/30 transition active:scale-95 cursor-pointer"
+            className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 py-3.5 px-4 text-xs font-bold uppercase tracking-wider text-white shadow-md shadow-emerald-600/20 transition active:scale-98 cursor-pointer"
           >
-            <ExternalLink className="w-4 h-4 text-emerald-200" />
+            <ExternalLink className="w-4 h-4 text-white" />
             <span>{t.sendWhatsAppBtn}</span>
           </button>
         </div>

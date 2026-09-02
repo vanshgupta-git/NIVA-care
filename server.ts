@@ -211,29 +211,32 @@ Your mission is to guide a stressed student through the safest immediate 60-seco
 You must NOT behave like a conversational chatbot. Output strictly structured clinical emergency triage JSON.
 
 ${hasImage ? `PRIMARY VISUAL-FIRST DIRECTIVE:
-An image has been uploaded as the ground-truth evidence. You MUST inspect and diagnose directly from the visual evidence in the image (e.g., wound characteristics, burn depth, chemical discoloration, laceration, bleeding, animal bite marks, swelling, eye trauma, or physical posture).
-DO NOT rely on, require, or wait for text descriptions. Even if the text description is empty, generic, or incomplete, accurately diagnose what is physically visible in the photograph.` : ''}
+An image has been uploaded as the ground-truth evidence. You MUST inspect and diagnose directly from the visual evidence in the image (e.g., wound characteristics, burn depth, chemical discoloration, laceration, bleeding, animal bite marks, swelling, eye trauma, skin rash, or physical posture).
+DO NOT default to thermal burns unless the photo explicitly shows a thermal burn. Accurately identify what is visible in the photograph (e.g. cut/laceration, abrasion, animal bite, chemical spill, eye injury, fracture/swelling, rash, etc.).
+DO NOT rely on, require, or wait for text descriptions.` : ''}
 
 LANGUAGE DIRECTIVE:
 Respond in the language specified: '${langCode}' (en = English, hi = Hindi, ta = Tamil, te = Telugu).
-All text in hazard_type, do_not_rules, steps (title and action_detail), and whatsapp_message MUST be translated clearly into the target language.
+All text in hazard_type, summary, strengths, weaknesses, detectedElements, actionableImprovements, do_not_rules, steps (title and action_detail), and whatsapp_message MUST be translated clearly into the target language.
 
 STRICT SCHEMA RULES:
-- hazard_type: Concise, specific medical or physical hazard diagnosis (e.g., "Chemical exposure / acid burn", "Second-degree thermal burn", "Canine bite laceration", "Heat exhaustion").
+- hazard_type: Concise, specific medical or physical hazard diagnosis (e.g., "Chemical exposure / Acid burn", "Deep laceration with bleeding", "Canine bite wound", "Abrasion trauma", "Contact dermatitis / Chemical rash", "Thermal scald").
 - severity: Must be EXACTLY one of: "minor", "moderate", "critical".
-  * "minor" -> Low risk, Dispensary / Self-care
-  * "moderate" -> Moderate risk, Health Centre Transfer needed
-  * "critical" -> Life-threatening / organ risk, 112 + Campus SOS required
+- score: Integer between 1 and 100 representing clinical urgency / risk level (85-100: critical/life-threat, 50-84: moderate/transfer needed, 10-49: minor/dispensary).
+- summary: 1-2 sentence clinical summary of what is observed in the image and emergency context.
+- strengths: Array of 2-3 positive or stabilizing clinical indicators (e.g., "Airway clear", "Intact distal sensation", "No pulsating arterial bleeding").
+- weaknesses: Array of 2-3 primary risk factors / complications (e.g., "Infection hazard from animal saliva", "Chemical permeation into dermis", "Tissue edema").
+- detectedElements: Array of 2-4 visual features observed in the photo (e.g., "Puncture lacerations", "Tissue erythema", "Blister formation").
+- actionableImprovements: Array of 2-3 follow-up medical recommendations (e.g., "Tetanus booster within 24 hours", "Daily sterile dressing renewal").
 - campus_context: Location string (e.g., "${locationStr}").
-- do_not_rules: Array of 2-4 critical things to NEVER do (e.g., "Do NOT apply toothpaste or ghee on burns", "Do NOT neutralize acid yourself", "Do NOT give fluids to unconscious person"). Include common Indian home remedy hazards if relevant.
+- do_not_rules: Array of 2-4 critical things to NEVER do (e.g., "Do NOT apply toothpaste, butter or ghee", "Do NOT apply turmeric on open wounds", "Do NOT rub the wound", "Do NOT give fluids to unconscious person").
 - steps: Array of 3 to 5 chronological, executable steps.
   Each step has:
-  * title: Short, imperative command (e.g. "Move away from the spill", "Flush with running water").
+  * title: Short, imperative command (e.g. "Direct pressure on wound", "Flush with running water").
   * duration_seconds: Numeric duration in seconds (e.g. 15, 30, 60, 600, 900).
   * action_detail: One clear, specific sentence on what to do.
 - whatsapp_message: A formatted WhatsApp dispatch text with emojis (🚨, 📍, ⚠️, 🩹, 🚑) containing Location, Incident, Immediate Action, and Action Needed.`;
 
-    const contents: any[] = [];
     const parts: any[] = [];
 
     if (imageBase64) {
@@ -250,16 +253,16 @@ STRICT SCHEMA RULES:
     const promptText = hasImage
       ? `[VISUAL-FIRST CLINICAL EMERGENCY TRIAGE]
 Location: ${locationStr}
-Student Notes (if any): "${text ? text : 'No text provided. Perform comprehensive diagnosis directly from the uploaded image.'}"
-Target Response Language: ${langCode}
+User Notes: "${text ? text : 'Diagnose purely from the attached image.'}"
+Target Language: ${langCode}
 
-CRITICAL TASK: Analyze the uploaded photograph directly. Diagnose the exact injury, hazard, or clinical condition visible in the image. Do not rely on description text. Extract severity, contraindications, and immediate 60-second procedural steps directly from visual evidence.`
+CRITICAL TASK: Analyze the uploaded photograph directly. Accurately diagnose the exact injury, wound, chemical spill, or physical trauma shown in this image. DO NOT default to a burn unless it is visibly a burn. Provide exact medical triage schema.`
       : `Campus Emergency Incident:
 Location: ${locationStr}
-Description provided by student: "${text || 'Emergency assessment requested'}"
-Target Response Language: ${langCode}
+Description: "${text || 'Emergency assessment requested'}"
+Target Language: ${langCode}
 
-Analyze the visual and descriptive evidence immediately. Output the structured JSON schema.`;
+Analyze the incident evidence immediately. Output the structured JSON schema.`;
 
     parts.push({ text: promptText });
 
@@ -281,12 +284,40 @@ Analyze the visual and descriptive evidence immediately. Output the structured J
               properties: {
                 hazard_type: {
                   type: Type.STRING,
-                  description: 'Concise medical or physical hazard diagnosis',
+                  description: 'Specific medical or physical hazard diagnosis from image/text',
                 },
                 severity: {
                   type: Type.STRING,
                   enum: ['minor', 'moderate', 'critical'],
                   description: 'Triage severity classification',
+                },
+                score: {
+                  type: Type.INTEGER,
+                  description: '1-100 Clinical Urgency / Risk index',
+                },
+                summary: {
+                  type: Type.STRING,
+                  description: 'Concise clinical triage diagnosis summary',
+                },
+                strengths: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING },
+                  description: '2-3 positive or stabilizing clinical indicators',
+                },
+                weaknesses: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING },
+                  description: '2-3 risk factors or complication hazards',
+                },
+                detectedElements: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING },
+                  description: '2-4 visual features observed in photo',
+                },
+                actionableImprovements: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING },
+                  description: '2-3 follow-up recommendations',
                 },
                 campus_context: {
                   type: Type.STRING,
@@ -295,7 +326,7 @@ Analyze the visual and descriptive evidence immediately. Output the structured J
                 do_not_rules: {
                   type: Type.ARRAY,
                   items: { type: Type.STRING },
-                  description: '2 to 4 strict contraindications / prohibited actions',
+                  description: '2 to 4 strict contraindications',
                 },
                 steps: {
                   type: Type.ARRAY,
@@ -312,10 +343,10 @@ Analyze the visual and descriptive evidence immediately. Output the structured J
                 },
                 whatsapp_message: {
                   type: Type.STRING,
-                  description: 'Pre-formatted SOS dispatch payload for security and warden',
+                  description: 'Pre-formatted SOS dispatch payload',
                 },
               },
-              required: ['hazard_type', 'severity', 'campus_context', 'do_not_rules', 'steps', 'whatsapp_message'],
+              required: ['hazard_type', 'severity', 'score', 'summary', 'strengths', 'weaknesses', 'detectedElements', 'actionableImprovements', 'campus_context', 'do_not_rules', 'steps', 'whatsapp_message'],
             },
           },
         });
@@ -336,19 +367,17 @@ Analyze the visual and descriptive evidence immediately. Output the structured J
 
     const parsedData = JSON.parse(responseText);
 
-    // Validate severity
     if (!['minor', 'moderate', 'critical'].includes(parsedData.severity)) {
       parsedData.severity = 'moderate';
     }
 
-    // Ensure steps exist
     if (!Array.isArray(parsedData.steps) || parsedData.steps.length === 0) {
       throw new Error('Invalid steps structure from model');
     }
 
     return res.json({
       ...parsedData,
-      why_guidance: `NIVA assessed this ${parsedData.hazard_type} based on provided multimodal evidence at ${locationStr}.`,
+      why_guidance: parsedData.summary || `NIVA assessed this ${parsedData.hazard_type} based on multimodal evidence at ${locationStr}.`,
       isAiGenerated: true,
       timestamp: new Date().toISOString()
     });
@@ -356,7 +385,7 @@ Analyze the visual and descriptive evidence immediately. Output the structured J
   } catch (error: any) {
     console.error('Gemini analysis error:', error?.message || error);
     // Fall back cleanly
-    const fallback = getFallbackAssessment(req.body.text || '', req.body.campusContext || 'Campus', req.body.language || 'en');
+    const fallback = getFallbackAssessment(req.body?.text || '', req.body?.campusContext || 'Campus', req.body?.language || 'en');
     return res.json({
       ...fallback,
       isAiGenerated: false,

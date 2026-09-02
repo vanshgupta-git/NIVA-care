@@ -11,6 +11,12 @@ export interface ProtocolStep {
 export interface SafetyAssessment {
   hazard_type: string;
   severity: Severity;
+  score?: number; // 0-100 Urgency Index
+  summary?: string;
+  strengths?: string[]; // Positive/protective signs (e.g. "Airway clear", "Localized to epidermis")
+  weaknesses?: string[]; // Risk factors (e.g. "Tissue necrosis risk", "Chemical permeation")
+  detectedElements?: string[]; // Visual findings detected in the image
+  actionableImprovements?: string[]; // Medical follow-up recommendations
   campus_context: string;
   do_not_rules: string[];
   steps: ProtocolStep[];
@@ -18,6 +24,7 @@ export interface SafetyAssessment {
   why_guidance?: string;
   isAiGenerated?: boolean;
   timestamp?: string;
+  analyzedImagePreview?: string | null;
 }
 
 export interface IncidentPreset {

@@ -1,6 +1,6 @@
 import { GoogleGenAI, Type } from '@google/genai';
 
-// Safe clinical fallback analyzer if network/AI is completely unreachable
+// Safe clinical fallback analyzer if network/AI is unreachable
 function getFallbackAssessment(text: string, location: string, hasImage: boolean = false, language: string = 'en') {
   const lower = (text || '').toLowerCase();
   
@@ -8,8 +8,14 @@ function getFallbackAssessment(text: string, location: string, hasImage: boolean
     return {
       hazard_type: 'Chemical exposure / Acid burn',
       severity: 'critical' as const,
+      score: 95,
+      summary: 'High-risk corrosive chemical splash identified. Immediate high-volume water dilution is required to halt tissue destruction.',
+      strengths: ['Immediate recognition of chemical hazard', 'Rapid flushing protocol initiated'],
+      weaknesses: ['Corrosive chemical penetration into dermis', 'Delayed flushing increases deep tissue necrosis risk'],
+      detectedElements: ['Chemical splash pattern', 'Skin erythema & burning sensation', 'Corrosive reagent contact'],
+      actionableImprovements: ['Flush continuously with tap water for 15+ mins', 'Remove contaminated clothing immediately', 'Transport to emergency dispensary'],
       campus_context: location || 'Chemistry Lab — Lab Annex 3',
-      why_guidance: 'Identified potential corrosive chemical contact requiring immediate copious water dilution.',
+      why_guidance: 'NIVA identified concentrated acid contact requiring continuous water irrigation to arrest dermal destruction.',
       do_not_rules: [
         'Do NOT rub the affected area.',
         'Do NOT attempt to neutralize the chemical with another substance.',
@@ -29,6 +35,12 @@ function getFallbackAssessment(text: string, location: string, hasImage: boolean
     return {
       hazard_type: 'Animal bite / Rabies exposure risk',
       severity: 'moderate' as const,
+      score: 75,
+      summary: 'Stray animal bite or scratch with high rabies transmission risk requiring mechanical soap-water wash and prompt vaccine protocol.',
+      strengths: ['Intact circulation', 'Direct access to campus health center for ARV'],
+      weaknesses: ['Rabies virus neurotropism', 'High bacterial infection rate from animal oral flora'],
+      detectedElements: ['Puncture laceration', 'Salivary contact', 'Local tissue erythema'],
+      actionableImprovements: ['15-minute running soap water debridement', 'Administer Anti-Rabies Vaccine (ARV) Day 0 and Tetanus Toxoid', 'Do not suture wound'],
       campus_context: location || 'Canteen Quadrangle',
       why_guidance: 'Identified high transmission risk bite needing urgent soap-water mechanical wash and ARV vaccine tracking.',
       do_not_rules: [
@@ -49,6 +61,12 @@ function getFallbackAssessment(text: string, location: string, hasImage: boolean
     return {
       hazard_type: 'Heat illness / Severe exhaustion',
       severity: 'critical' as const,
+      score: 88,
+      summary: 'Acute heat-induced collapse or severe exhaustion requiring immediate shade, airway stabilization, and passive/active cooling.',
+      strengths: ['Spontaneous breathing present', 'Rapid bystander alert'],
+      weaknesses: ['Core body temperature hyperthermia risk', 'Risk of aspiration if given oral fluids while altered'],
+      detectedElements: ['Sun exposure collapse', 'Diaphoresis / altered sensorium', 'Elevated pulse rate'],
+      actionableImprovements: ['Move to shaded ventilated area', 'Loosen restrictive clothing', 'Apply damp cloths to axillae/groin', 'Call campus ambulance'],
       campus_context: location || 'Sports Ground',
       why_guidance: 'Detected acute thermal breakdown / collapse requiring rapid cooling and airway protection.',
       do_not_rules: [
@@ -70,6 +88,12 @@ function getFallbackAssessment(text: string, location: string, hasImage: boolean
   return {
     hazard_type: hasImage ? 'Physical trauma / Acute injury (Visual Triage)' : 'Thermal / Mechanical injury',
     severity: 'moderate' as const,
+    score: 65,
+    summary: 'Acute trauma or injury assessment. Priority is hemorrhage control, stabilization, and sterile cooling.',
+    strengths: ['Airway intact', 'Local stabilization underway', 'No arterial spurting'],
+    weaknesses: ['Skin barrier disruption', 'Infection risk', 'Progressive swelling'],
+    detectedElements: ['Visible tissue trauma', 'Localized erythema', 'Acute swelling'],
+    actionableImprovements: ['Flush with sterile saline/clean water', 'Apply sterile non-stick dressing', 'Consult campus dispensary doctor'],
     campus_context: location || 'Hostel / Campus Annex',
     why_guidance: 'Clinical triage assessment prioritized immediate bleeding control, stabilization, and sterile cooling.',
     do_not_rules: [
@@ -137,14 +161,17 @@ DO NOT rely on, require, or wait for text descriptions.` : ''}
 
 LANGUAGE DIRECTIVE:
 Respond in the language specified: '${langCode}' (en = English, hi = Hindi, ta = Tamil, te = Telugu).
-All text in hazard_type, do_not_rules, steps (title and action_detail), and whatsapp_message MUST be translated clearly into the target language.
+All text in hazard_type, summary, strengths, weaknesses, detectedElements, actionableImprovements, do_not_rules, steps (title and action_detail), and whatsapp_message MUST be translated clearly into the target language.
 
 STRICT SCHEMA RULES:
 - hazard_type: Concise, specific medical or physical hazard diagnosis (e.g., "Chemical exposure / Acid burn", "Deep laceration with bleeding", "Canine bite wound", "Abrasion trauma", "Contact dermatitis / Chemical rash", "Thermal scald").
 - severity: Must be EXACTLY one of: "minor", "moderate", "critical".
-  * "minor" -> Low risk, Dispensary / Self-care
-  * "moderate" -> Moderate risk, Health Centre Transfer needed
-  * "critical" -> Life-threatening / organ risk, 112 + Campus SOS required
+- score: Integer between 1 and 100 representing clinical urgency / risk level (85-100: critical/life-threat, 50-84: moderate/transfer needed, 10-49: minor/dispensary).
+- summary: 1-2 sentence clinical summary of what is observed in the image and emergency context.
+- strengths: Array of 2-3 positive or stabilizing clinical indicators (e.g., "Airway clear", "Intact distal sensation", "No pulsating arterial bleeding").
+- weaknesses: Array of 2-3 primary risk factors / complications (e.g., "Infection hazard from animal saliva", "Chemical permeation into dermis", "Tissue edema").
+- detectedElements: Array of 2-4 visual features observed in the photo (e.g., "Puncture lacerations", "Tissue erythema", "Blister formation").
+- actionableImprovements: Array of 2-3 follow-up medical recommendations (e.g., "Tetanus booster within 24 hours", "Daily sterile dressing renewal").
 - campus_context: Location string (e.g., "${locationStr}").
 - do_not_rules: Array of 2-4 critical things to NEVER do (e.g., "Do NOT apply toothpaste, butter or ghee", "Do NOT apply turmeric on open wounds", "Do NOT rub the wound", "Do NOT give fluids to unconscious person").
 - steps: Array of 3 to 5 chronological, executable steps.
@@ -182,7 +209,6 @@ Analyze the incident evidence immediately. Output the structured JSON schema.`;
 
     parts.push({ text: promptText });
 
-    // Try primary model, with fallback models if first is unavailable
     const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
     let lastError: any = null;
     let responseText = '';
@@ -191,7 +217,7 @@ Analyze the incident evidence immediately. Output the structured JSON schema.`;
       try {
         const response = await ai.models.generateContent({
           model: modelName,
-          contents: parts, // CORRECT format for @google/genai is the parts array directly
+          contents: parts,
           config: {
             systemInstruction,
             temperature: 0.2,
@@ -207,6 +233,34 @@ Analyze the incident evidence immediately. Output the structured JSON schema.`;
                   type: Type.STRING,
                   enum: ['minor', 'moderate', 'critical'],
                   description: 'Triage severity classification',
+                },
+                score: {
+                  type: Type.INTEGER,
+                  description: '1-100 Clinical Urgency / Risk index',
+                },
+                summary: {
+                  type: Type.STRING,
+                  description: 'Concise clinical triage diagnosis summary',
+                },
+                strengths: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING },
+                  description: '2-3 positive or stabilizing clinical indicators',
+                },
+                weaknesses: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING },
+                  description: '2-3 risk factors or complication hazards',
+                },
+                detectedElements: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING },
+                  description: '2-4 visual features observed in photo',
+                },
+                actionableImprovements: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING },
+                  description: '2-3 follow-up recommendations',
                 },
                 campus_context: {
                   type: Type.STRING,
@@ -235,14 +289,14 @@ Analyze the incident evidence immediately. Output the structured JSON schema.`;
                   description: 'Pre-formatted SOS dispatch payload',
                 },
               },
-              required: ['hazard_type', 'severity', 'campus_context', 'do_not_rules', 'steps', 'whatsapp_message'],
+              required: ['hazard_type', 'severity', 'score', 'summary', 'strengths', 'weaknesses', 'detectedElements', 'actionableImprovements', 'campus_context', 'do_not_rules', 'steps', 'whatsapp_message'],
             },
           },
         });
 
         responseText = response.text?.trim() || '';
         if (responseText) {
-          break; // Success!
+          break;
         }
       } catch (err: any) {
         lastError = err;
@@ -266,7 +320,7 @@ Analyze the incident evidence immediately. Output the structured JSON schema.`;
 
     return res.status(200).json({
       ...parsedData,
-      why_guidance: `NIVA assessed this ${parsedData.hazard_type} based on multimodal evidence at ${locationStr}.`,
+      why_guidance: parsedData.summary || `NIVA assessed this ${parsedData.hazard_type} based on multimodal evidence at ${locationStr}.`,
       isAiGenerated: true,
       timestamp: new Date().toISOString()
     });

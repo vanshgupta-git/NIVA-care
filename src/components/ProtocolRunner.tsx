@@ -10,8 +10,7 @@ import {
   Check, 
   Clock, 
   Activity,
-  Sparkles,
-  Radio
+  CheckCircle2
 } from 'lucide-react';
 import { ProtocolStep, Language } from '../types';
 import { TRANSLATIONS } from '../data/translations';
@@ -114,20 +113,17 @@ export const ProtocolRunner: React.FC<ProtocolRunnerProps> = ({
   return (
     <section 
       aria-labelledby="protocol-runner-heading"
-      className="glass-panel rounded-3xl flex flex-col relative overflow-hidden shadow-2xl border border-white/10"
+      className="bg-white border border-slate-200/80 rounded-3xl flex flex-col relative overflow-hidden shadow-sm"
     >
-      {/* Background radial glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none" />
-
       <div className="p-6 sm:p-10 flex flex-col items-center text-center relative z-10">
         
         {/* Top Header Row */}
         <div className="w-full flex justify-between items-center mb-8">
           <div className="flex items-center gap-2">
-            <span className="px-3 py-1 bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-mono font-bold rounded-xl">
+            <span className="px-3 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-mono font-bold rounded-xl">
               STEP {String(currentStepIndex + 1).padStart(2, '0')}
             </span>
-            <span className="text-xs text-slate-400 font-mono font-bold uppercase tracking-widest">
+            <span className="text-xs text-slate-400 font-mono font-bold uppercase tracking-wider">
               OF {String(steps.length).padStart(2, '0')}
             </span>
           </div>
@@ -138,67 +134,58 @@ export const ProtocolRunner: React.FC<ProtocolRunnerProps> = ({
               id="voice-narration-btn"
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer border ${
                 isSpeaking 
-                  ? 'bg-red-500/20 border-red-500/40 text-red-400 animate-pulse' 
-                  : 'bg-white/[0.04] border-white/10 text-slate-300 hover:text-white hover:bg-white/[0.08]'
+                  ? 'bg-rose-50 border-rose-200 text-rose-700 animate-pulse' 
+                  : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
               }`}
             >
-              {isSpeaking ? (
-                <>
-                  <Volume2 className="w-3.5 h-3.5 text-red-400" />
-                  <span>VOICE: SPEAKING...</span>
-                </>
-              ) : (
-                <>
-                  <Volume2 className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>VOICE GUIDANCE</span>
-                </>
-              )}
+              <Volume2 className="w-3.5 h-3.5" />
+              <span>{isSpeaking ? 'Voice: Speaking...' : 'Voice Guidance'}</span>
             </button>
           )}
         </div>
 
         {/* Circular Countdown Timer */}
-        <div className="mb-8 relative">
-          <div className="w-52 h-52 sm:w-56 sm:h-56 relative flex items-center justify-center">
+        <div className="mb-6 relative">
+          <div className="w-48 h-48 sm:w-52 sm:h-52 relative flex items-center justify-center">
             <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 160 160">
               {/* Background track circle */}
               <circle
                 cx="80"
                 cy="80"
                 r={radius}
-                stroke="rgba(255, 255, 255, 0.06)"
+                stroke="#F1F5F9"
                 strokeWidth="8"
                 fill="transparent"
               />
-              {/* Animated Progress Circle with Glow */}
+              {/* Animated Progress Circle */}
               <circle
                 cx="80"
                 cy="80"
                 r={radius}
-                stroke={secondsRemaining === 0 ? '#10B981' : isRunning ? '#06B6D4' : '#F59E0B'}
+                stroke={secondsRemaining === 0 ? '#10B981' : isRunning ? '#4F46E5' : '#D97706'}
                 strokeWidth="8"
                 strokeDasharray={circumference}
                 strokeDashoffset={strokeDashoffset}
                 strokeLinecap="round"
                 fill="transparent"
-                className="transition-all duration-1000 ease-linear drop-shadow-[0_0_12px_rgba(6,182,212,0.6)]"
+                className="transition-all duration-1000 ease-linear"
               />
             </svg>
 
             {/* Timer Center Display */}
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
               {secondsRemaining === 0 ? (
-                <div className="flex flex-col items-center text-emerald-400">
-                  <Check className="w-10 h-10 stroke-[3] animate-bounce" />
-                  <span className="text-[10px] uppercase font-mono font-bold tracking-widest mt-1">STEP COMPLETE</span>
+                <div className="flex flex-col items-center text-emerald-600">
+                  <Check className="w-9 h-9 stroke-[3]" />
+                  <span className="text-[10px] uppercase font-mono font-bold tracking-wider mt-1">STEP COMPLETE</span>
                 </div>
               ) : (
                 <>
-                  <span className="text-4xl sm:text-5xl font-black tracking-tighter text-white font-mono drop-shadow-md">
+                  <span className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 font-mono">
                     {formatTime(secondsRemaining)}
                   </span>
-                  <span className="text-[10px] uppercase font-mono font-bold text-cyan-400 tracking-widest mt-1">
-                    TARGET TIMELINE
+                  <span className="text-[10px] uppercase font-mono font-bold text-slate-400 tracking-wider mt-0.5">
+                    Target Duration
                   </span>
                 </>
               )}
@@ -206,11 +193,11 @@ export const ProtocolRunner: React.FC<ProtocolRunnerProps> = ({
           </div>
 
           {/* Quick Timer Reset Button */}
-          <div className="flex justify-center mt-2">
+          <div className="flex justify-center mt-1">
             <button
               onClick={resetTimer}
               id="timer-reset-btn"
-              className="flex items-center gap-1.5 text-xs font-mono font-bold text-slate-400 hover:text-cyan-300 uppercase tracking-wider transition cursor-pointer bg-white/[0.03] px-3 py-1 rounded-full border border-white/[0.06]"
+              className="flex items-center gap-1.5 text-xs font-mono font-semibold text-slate-400 hover:text-slate-700 uppercase tracking-wider transition cursor-pointer bg-slate-50 px-3 py-1 rounded-full border border-slate-200"
             >
               <RotateCcw className="w-3 h-3" />
               <span>Reset Timer</span>
@@ -219,22 +206,22 @@ export const ProtocolRunner: React.FC<ProtocolRunnerProps> = ({
         </div>
 
         {/* Action Title & Detail */}
-        <h2 id="protocol-runner-heading" className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight leading-tight mb-4 uppercase text-white">
+        <h2 id="protocol-runner-heading" className="text-2xl sm:text-3xl font-black tracking-tight leading-tight mb-3 uppercase text-slate-900">
           {activeStep.title}
         </h2>
 
-        <div className="max-w-xl mx-auto mb-8 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] backdrop-blur-md">
-          <p className="text-base sm:text-lg font-medium text-slate-200 leading-relaxed">
+        <div className="max-w-xl mx-auto mb-8 p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+          <p className="text-base sm:text-lg font-medium text-slate-700 leading-relaxed">
             {activeStep.action_detail}
           </p>
         </div>
 
         {/* Action Buttons: Pause & Next */}
-        <div className="w-full flex flex-col sm:flex-row gap-3 sm:gap-4 max-w-md mx-auto">
+        <div className="w-full flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
           <button
             onClick={toggleTimer}
             id="timer-toggle-btn"
-            className="flex-1 py-4 rounded-xl border border-white/15 bg-white/[0.05] hover:bg-white/[0.1] text-white font-bold uppercase tracking-widest text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95"
+            className="flex-1 py-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 font-bold uppercase tracking-wider text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98 shadow-xs"
           >
             {isRunning ? (
               <>
@@ -243,7 +230,7 @@ export const ProtocolRunner: React.FC<ProtocolRunnerProps> = ({
               </>
             ) : (
               <>
-                <Play className="w-4 h-4 fill-current text-cyan-400" />
+                <Play className="w-4 h-4 fill-current text-indigo-600" />
                 <span>{t.resume}</span>
               </>
             )}
@@ -253,10 +240,10 @@ export const ProtocolRunner: React.FC<ProtocolRunnerProps> = ({
             onClick={handleNext}
             disabled={currentStepIndex === steps.length - 1}
             id="next-step-btn"
-            className={`flex-1 py-4 rounded-xl font-bold uppercase tracking-widest text-xs sm:text-sm shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95 ${
+            className={`flex-1 py-3.5 rounded-xl font-bold uppercase tracking-wider text-xs sm:text-sm shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98 ${
               currentStepIndex === steps.length - 1
-                ? 'bg-emerald-600 text-white cursor-default shadow-emerald-600/30'
-                : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-[1.02]'
+                ? 'bg-emerald-600 text-white cursor-default shadow-emerald-600/20'
+                : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20'
             }`}
           >
             <span>{currentStepIndex === steps.length - 1 ? 'Protocol Complete' : t.nextStep}</span>
@@ -265,14 +252,14 @@ export const ProtocolRunner: React.FC<ProtocolRunnerProps> = ({
         </div>
 
         {/* Sequence Steps Bar */}
-        <div className="w-full mt-10 pt-6 border-t border-white/[0.08]">
-          <div className="flex items-center justify-between text-xs font-mono uppercase tracking-widest font-bold text-slate-400 mb-3">
+        <div className="w-full mt-10 pt-6 border-t border-slate-100">
+          <div className="flex items-center justify-between text-xs font-mono uppercase tracking-wider font-bold text-slate-500 mb-3">
             <span>Protocol Sequence Flow</span>
             <div className="flex items-center gap-2">
               {currentStepIndex > 0 && (
                 <button
                   onClick={handlePrev}
-                  className="text-xs font-bold text-cyan-400 hover:underline cursor-pointer flex items-center gap-1"
+                  className="text-xs font-bold text-indigo-600 hover:underline cursor-pointer flex items-center gap-1"
                 >
                   <ChevronLeft className="w-3.5 h-3.5" />
                   <span>{t.prevStep}</span>
@@ -290,16 +277,16 @@ export const ProtocolRunner: React.FC<ProtocolRunnerProps> = ({
                 <button
                   key={idx}
                   onClick={() => setCurrentStepIndex(idx)}
-                  className={`text-left p-3.5 rounded-xl border transition-all cursor-pointer ${
+                  className={`text-left p-3.5 rounded-2xl border transition-all cursor-pointer ${
                     isCurrent
-                      ? 'border-cyan-400 bg-cyan-950/80 text-white shadow-lg shadow-cyan-500/20'
+                      ? 'border-indigo-600 bg-indigo-50/70 text-slate-900 shadow-xs'
                       : isPast
-                      ? 'border-emerald-500/30 bg-emerald-950/40 text-emerald-300'
-                      : 'border-white/5 bg-white/[0.02] text-slate-400 hover:bg-white/[0.06] hover:text-white'
+                      ? 'border-emerald-200 bg-emerald-50/50 text-emerald-900'
+                      : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                   }`}
                 >
                   <p className={`text-[10px] font-mono font-bold uppercase tracking-wider ${
-                    isCurrent ? 'text-cyan-300' : isPast ? 'text-emerald-400' : 'text-slate-500'
+                    isCurrent ? 'text-indigo-700' : isPast ? 'text-emerald-700' : 'text-slate-400'
                   }`}>
                     {isCurrent ? 'ACTIVE STEP' : isPast ? 'COMPLETED' : `STEP 0${idx + 1}`}
                   </p>
@@ -314,9 +301,9 @@ export const ProtocolRunner: React.FC<ProtocolRunnerProps> = ({
 
       </div>
       
-      {/* Bottom Glowing Cyan Progress Bar */}
+      {/* Bottom Progress Line */}
       <div 
-        className="absolute bottom-0 left-0 h-1.5 bg-gradient-to-r from-cyan-500 to-blue-500 shadow-[0_0_12px_rgba(6,182,212,0.8)] transition-all duration-500" 
+        className="h-1 bg-indigo-600 transition-all duration-500" 
         style={{ width: `${overallStepPercent}%` }}
       />
     </section>
