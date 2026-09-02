@@ -196,30 +196,37 @@ export const IncidentConsole: React.FC<IncidentConsoleProps> = ({
 
           {/* Multimodal Photo Attachment Zone */}
           {imagePreview ? (
-            <div className="relative rounded-lg border-2 border-[#1A1A1A] bg-[#1A1A1A] overflow-hidden max-w-md mx-auto sm:mx-0 shadow-md">
-              <img
-                src={imagePreview}
-                alt="Incident capture"
-                className="w-full h-56 sm:h-64 object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 flex flex-col justify-between p-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono tracking-wider bg-[#D92D20] text-white px-2 py-0.5 rounded font-bold uppercase">
-                    IMAGE READY FOR TRIAGE
-                  </span>
-                  <button
-                    type="button"
-                    onClick={removeImage}
-                    className="p-1.5 rounded bg-black/60 text-white hover:bg-[#D92D20] transition cursor-pointer"
-                    title={t.removePhoto}
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+            <div className="space-y-2 max-w-md mx-auto sm:mx-0">
+              <div className="relative rounded-lg border-2 border-[#1A1A1A] bg-[#1A1A1A] overflow-hidden shadow-md">
+                <img
+                  src={imagePreview}
+                  alt="Incident capture"
+                  className="w-full h-56 sm:h-64 object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 flex flex-col justify-between p-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono tracking-wider bg-[#D92D20] text-white px-2 py-0.5 rounded font-bold uppercase flex items-center gap-1.5">
+                      <Sparkles className="w-3 h-3" />
+                      IMAGE-FIRST VISION TRIAGE READY
+                    </span>
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      className="p-1.5 rounded bg-black/60 text-white hover:bg-[#D92D20] transition cursor-pointer"
+                      title={t.removePhoto}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p className="text-xs text-white/95 font-medium flex items-center gap-1.5 bg-black/40 backdrop-blur-xs p-2 rounded">
+                    <span>✨</span>
+                    <span>AI will diagnose directly from this photo without requiring a text description.</span>
+                  </p>
                 </div>
-                <p className="text-xs text-white/90 font-medium">
-                  {t.photoCaptured}
-                </p>
               </div>
+              <p className="text-xs text-[#027A48] font-bold flex items-center gap-1">
+                <span>✓</span> Photo attached — You can analyze immediately or add optional notes below.
+              </p>
             </div>
           ) : (
             <div
@@ -249,7 +256,7 @@ export const IncidentConsole: React.FC<IncidentConsoleProps> = ({
                     {t.dragDropPhoto}
                   </p>
                   <p className="text-xs text-[#888] mt-0.5">
-                    Supports camera capture, gallery upload, PNG, JPG, WEBP
+                    Supports camera capture, gallery upload, PNG, JPG, WEBP — AI diagnoses directly from the photo!
                   </p>
                 </div>
                 <div className="flex gap-2 mt-2">
@@ -280,18 +287,29 @@ export const IncidentConsole: React.FC<IncidentConsoleProps> = ({
 
           {/* Text Description Box */}
           <div>
-            <label 
-              htmlFor="incident-description-input"
-              className="block text-[11px] uppercase tracking-[0.15em] font-bold text-[#888] mb-2"
-            >
-              INCIDENT DETAILS (WHAT HAPPENED?)
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label 
+                htmlFor="incident-description-input"
+                className="block text-[11px] uppercase tracking-[0.15em] font-bold text-[#888]"
+              >
+                {imagePreview ? 'INCIDENT DETAILS (OPTIONAL IF PHOTO ATTACHED)' : 'INCIDENT DETAILS (WHAT HAPPENED?)'}
+              </label>
+              {imagePreview && (
+                <span className="text-[10px] text-[#666] font-mono uppercase bg-[#F0EFEB] px-2 py-0.5 rounded">
+                  Optional
+                </span>
+              )}
+            </div>
             <textarea
               id="incident-description-input"
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder={t.describePlaceholder}
+              placeholder={
+                imagePreview 
+                  ? '(Optional) Add any extra notes, or click analyze to diagnose directly from the image...' 
+                  : t.describePlaceholder
+              }
               className="w-full rounded-md border border-[#E5E2DD] bg-[#FDFCFB] p-4 text-sm text-[#1A1A1A] placeholder:text-[#999] focus:border-[#1A1A1A] focus:outline-none focus:ring-1 focus:ring-[#1A1A1A] transition resize-none leading-relaxed"
             />
           </div>
@@ -368,7 +386,7 @@ export const IncidentConsole: React.FC<IncidentConsoleProps> = ({
               ) : (
                 <>
                   <Zap className="w-4 h-4 text-[#F2994A] fill-[#F2994A]" />
-                  <span>{t.analyzeBtn}</span>
+                  <span>{imagePreview ? '⚡ ANALYZE PHOTO WITH GEMINI VISION' : t.analyzeBtn}</span>
                   <ArrowRight className="w-4 h-4 ml-1" />
                 </>
               )}

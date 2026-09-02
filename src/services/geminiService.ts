@@ -87,7 +87,7 @@ export async function analyzeIncident(params: {
   } catch (error) {
     console.warn('Multimodal incident analysis fallback:', error);
     
-    // Select closest fallback preset based on input keywords
+    // Select closest fallback preset based on input keywords or image presence
     const lower = (text || '').toLowerCase();
     let selectedPreset = INCIDENT_PRESETS[1]; // default immersion scald
 
@@ -102,6 +102,7 @@ export async function analyzeIncident(params: {
     const fallbackData = selectedPreset.data[language] || selectedPreset.data.en;
     return {
       ...fallbackData,
+      hazard_type: imageBase64 ? `${fallbackData.hazard_type} (Visual Assessment)` : fallbackData.hazard_type,
       campus_context: campusContext || fallbackData.campus_context,
       isAiGenerated: false,
       timestamp: new Date().toISOString()

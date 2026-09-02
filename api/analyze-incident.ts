@@ -181,16 +181,22 @@ export default async function handler(req: any, res: any) {
       },
     });
 
+    const hasImage = Boolean(imageBase64);
+
     const systemInstruction = `You are NIVA — AI Campus Health & Emergency Co-Pilot for Indian college, university, and engineering campuses (e.g. IITs, NITs, central universities).
 Your mission is to guide a stressed student through the safest immediate 60-second procedural actions with minimum cognitive load.
 You must NOT behave like a conversational chatbot. Output strictly structured clinical emergency triage JSON.
+
+${hasImage ? `PRIMARY VISUAL-FIRST DIRECTIVE:
+An image has been uploaded as the ground-truth evidence. You MUST inspect and diagnose directly from the visual evidence in the image (e.g., wound characteristics, burn depth, chemical discoloration, laceration, bleeding, animal bite marks, swelling, eye trauma, or physical posture).
+DO NOT rely on, require, or wait for text descriptions. Even if the text description is empty, generic, or incomplete, accurately diagnose what is physically visible in the photograph.` : ''}
 
 LANGUAGE DIRECTIVE:
 Respond in the language specified: '${langCode}' (en = English, hi = Hindi, ta = Tamil, te = Telugu).
 All text in hazard_type, do_not_rules, steps (title and action_detail), and whatsapp_message MUST be translated clearly into the target language.
 
 STRICT SCHEMA RULES:
-- hazard_type: Concise name of the emergency or injury (e.g., "Chemical exposure / acid burn", "Thermal burn", "Heat stroke").
+- hazard_type: Concise, specific medical or physical hazard diagnosis (e.g., "Chemical exposure / acid burn", "Second-degree thermal burn", "Canine bite laceration", "Heat exhaustion").
 - severity: Must be EXACTLY one of: "minor", "moderate", "critical".
   * "minor" -> Low risk, Dispensary / Self-care
   * "moderate" -> Moderate risk, Health Centre Transfer needed
@@ -216,12 +222,19 @@ STRICT SCHEMA RULES:
       });
     }
 
-    const promptText = `Campus Emergency Incident:
+    const promptText = hasImage
+      ? `[VISUAL-FIRST CLINICAL EMERGENCY TRIAGE]
 Location: ${locationStr}
-Description provided by student: "${text || 'Emergency assessment requested from image'}"
+Student Notes (if any): "${text ? text : 'No text provided. Perform comprehensive diagnosis directly from the uploaded image.'}"
 Target Response Language: ${langCode}
 
-Analyze the visual and descriptive evidence immediately. Output the structured JSON schema.`;
+CRITICAL TASK: Analyze the uploaded photograph directly. Diagnose the exact injury, hazard, or clinical condition visible in the image. Do not rely on description text. Extract severity, contraindications, and immediate 60-second procedural steps directly from visual evidence.`
+      : `Campus Emergency Incident:
+Location: ${locationStr}
+Description provided by student: "${text || 'Emergency assessment requested'}"
+Target Response Language: ${langCode}
+
+Analyze the incident evidence immediately. Output the structured JSON schema.`;
 
     parts.push({ text: promptText });
 
