@@ -8,15 +8,6 @@ describe('TriageHUD Component', () => {
   const mockAssessment: SafetyAssessment = {
     hazard_type: 'Chemical exposure / Acid burn',
     severity: 'critical',
-    overallScore: 94,
-    scores: {
-      codeQuality: 92,
-      security: 96,
-      efficiency: 95,
-      testing: 88,
-      accessibility: 90,
-      problemStatementAlignment: 98
-    },
     summary: 'High-risk corrosive chemical contact identified.',
     strengths: ['Immediate chemical hazard classification', 'Rapid flushing'],
     weaknesses: ['Corrosive chemical penetration into dermis', 'Delayed irrigation risk'],
@@ -34,7 +25,7 @@ describe('TriageHUD Component', () => {
 
   const mockReset = vi.fn();
 
-  it('renders overall score gauge, hazard type, and summary', () => {
+  it('renders hazard type, severity level, campus location, and summary', () => {
     render(
       <TriageHUD
         assessment={mockAssessment}
@@ -45,11 +36,11 @@ describe('TriageHUD Component', () => {
 
     expect(screen.getByText(/Chemical exposure \/ Acid burn/i)).toBeInTheDocument();
     expect(screen.getByText(/High-risk corrosive chemical contact identified/i)).toBeInTheDocument();
-    expect(screen.getByText('94')).toBeInTheDocument();
+    expect(screen.getByText(/CRITICAL SEVERITY/i)).toBeInTheDocument();
     expect(screen.getByText(/Chemistry Lab — Lab Annex 3/i)).toBeInTheDocument();
   });
 
-  it('renders all 6 category scores accurately', () => {
+  it('renders key clinical stabilizers, hazards, and action recommendations', () => {
     render(
       <TriageHUD
         assessment={mockAssessment}
@@ -58,45 +49,17 @@ describe('TriageHUD Component', () => {
       />
     );
 
-    expect(screen.getByText('Code Quality')).toBeInTheDocument();
-    expect(screen.getByText('92')).toBeInTheDocument();
-
-    expect(screen.getByText('Security')).toBeInTheDocument();
-    expect(screen.getByText('96')).toBeInTheDocument();
-
-    expect(screen.getByText('Efficiency')).toBeInTheDocument();
-    expect(screen.getByText('95')).toBeInTheDocument();
-
-    expect(screen.getByText('Testing')).toBeInTheDocument();
-    expect(screen.getByText('88')).toBeInTheDocument();
-
-    expect(screen.getByText('Accessibility')).toBeInTheDocument();
-    expect(screen.getByText('90')).toBeInTheDocument();
-
-    expect(screen.getByText('Problem Alignment')).toBeInTheDocument();
-    expect(screen.getByText('98')).toBeInTheDocument();
-  });
-
-  it('renders strengths, weaknesses, and recommendations', () => {
-    render(
-      <TriageHUD
-        assessment={mockAssessment}
-        currentLanguage="en"
-        onReset={mockReset}
-      />
-    );
-
-    expect(screen.getByText(/Key Strengths & Stabilizers/i)).toBeInTheDocument();
+    expect(screen.getByText(/Key Clinical Stabilizers/i)).toBeInTheDocument();
     expect(screen.getByText(/Immediate chemical hazard classification/i)).toBeInTheDocument();
 
     expect(screen.getByText(/Risk Factors & Hazards/i)).toBeInTheDocument();
     expect(screen.getByText(/Corrosive chemical penetration into dermis/i)).toBeInTheDocument();
 
-    expect(screen.getByText(/Actionable Recommendations/i)).toBeInTheDocument();
+    expect(screen.getByText(/Action Recommendations/i)).toBeInTheDocument();
     expect(screen.getByText(/Flush continuously with water for 15 minutes/i)).toBeInTheDocument();
   });
 
-  it('calls onReset when Analyze Another Image button is clicked', () => {
+  it('calls onReset when Analyze Another Incident button is clicked', () => {
     render(
       <TriageHUD
         assessment={mockAssessment}
@@ -105,7 +68,7 @@ describe('TriageHUD Component', () => {
       />
     );
 
-    const resetBtn = screen.getByRole('button', { name: /Analyze Another Image/i });
+    const resetBtn = screen.getByRole('button', { name: /Analyze Another Incident/i });
     fireEvent.click(resetBtn);
 
     expect(mockReset).toHaveBeenCalledTimes(1);

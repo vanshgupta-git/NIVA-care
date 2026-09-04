@@ -28,7 +28,7 @@ describe('App Integration Flow', () => {
     expect(screen.getByText(/Active 60-Second Action Protocol/i)).toBeInTheDocument();
     expect(screen.getByText(/BACK TO INTAKE CONSOLE/i)).toBeInTheDocument();
     expect(screen.getAllByText(/Chemical exposure \/ acid burn/i)[0]).toBeInTheDocument();
-    expect(screen.getByText(/Code Quality/i)).toBeInTheDocument();
+    expect(screen.getByText(/Key Clinical Stabilizers/i)).toBeInTheDocument();
     expect(screen.getByText(/Critical Safety Contraindications/i)).toBeInTheDocument();
   });
 
@@ -76,13 +76,6 @@ describe('App Integration Flow', () => {
     const mockApiResponse = {
       hazard_type: 'Severe Laceration Trauma',
       severity: 'moderate',
-      overallScore: 78,
-      codeQuality: 88,
-      security: 82,
-      efficiency: 85,
-      testing: 80,
-      accessibility: 90,
-      problemStatementAlignment: 92,
       summary: 'Deep cut on palm requiring direct mechanical pressure.',
       strengths: ['Intact distal perfusion', 'Bleeding localized'],
       weaknesses: ['Secondary bacterial infection hazard'],
@@ -113,7 +106,7 @@ describe('App Integration Flow', () => {
     await waitFor(() => {
       expect(screen.getByText(/Severe Laceration Trauma/i)).toBeInTheDocument();
       expect(screen.getByText(/Deep cut on palm requiring direct mechanical pressure/i)).toBeInTheDocument();
-      expect(screen.getByText('78')).toBeInTheDocument();
+      expect(screen.getByText(/Key Clinical Stabilizers/i)).toBeInTheDocument();
     });
   });
 });
